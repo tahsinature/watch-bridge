@@ -142,3 +142,7 @@ path, so the site works from any repo subpath with no server rewrite rules.
 Data and images from [TMDB](https://www.themoviedb.org), availability from
 JustWatch. This product uses the TMDB API but is not endorsed or certified by
 TMDB.
+
+## License
+
+[MIT](LICENSE) © Tahsin

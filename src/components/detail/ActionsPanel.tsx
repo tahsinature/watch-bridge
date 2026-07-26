@@ -1,18 +1,16 @@
 import { LabeledBlock, LabeledRow } from "./LabeledRow";
-import { LibraryActions } from "./LibraryActions";
 import { PosterActions } from "./PosterActions";
 import { ActionBar } from "@/components/actions/ActionBar";
 import type { TitleDetails } from "@/types";
 
-/** Every action for a title, grouped into labeled rows. */
+/**
+ * External actions for a title. Shortlist and Watched deliberately live in the
+ * hero (and the sticky bar on phones) rather than here — they're the primary
+ * actions and shouldn't sit below two sections of metadata.
+ */
 export function ActionsPanel({ details }: { details: TitleDetails }) {
   return (
     <LabeledBlock>
-      {/* Hidden on phones — these live in the sheet's sticky bar there. */}
-      <LabeledRow label="Library" className="hidden sm:grid">
-        <LibraryActions details={details} />
-      </LabeledRow>
-
       <ActionBar details={details} />
 
       <LabeledRow label="Poster">

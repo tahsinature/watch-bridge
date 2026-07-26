@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
 import { ActionsPanel } from "./ActionsPanel";
+import { LibraryActions } from "./LibraryActions";
 import { MobileActionBar } from "./MobileActionBar";
 import { CastStrip } from "./CastStrip";
 import { TrailerGallery } from "./TrailerGallery";
@@ -116,6 +117,14 @@ function DetailBody({ details }: { details: TitleDetails }) {
                 “{details.tagline}”
               </p>
             )}
+
+            {/*
+              The app's primary action belongs above the fold, not below Cast
+              and Details. Phones get these in the sheet's sticky bar instead.
+            */}
+            <div className="mt-3 hidden sm:block">
+              <LibraryActions details={details} />
+            </div>
           </div>
         </div>
       </div>
