@@ -55,17 +55,19 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Wraps rather than overflowing — three controls don't fit a phone row. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">
           Shortlist
           <span className="ml-2 text-sm font-normal text-muted-foreground">
             {shortlist.length}
           </span>
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <ContentLevelFilter />
           <Button
             size="sm"
+            className="shrink-0"
             disabled={selected.size < 2}
             onClick={() => setCompareOpen(true)}
           >

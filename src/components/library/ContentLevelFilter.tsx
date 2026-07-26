@@ -17,15 +17,16 @@ export function ContentLevelFilter() {
   const setMaxLevel = useSettings((s) => s.setMaxContentLevel);
 
   return (
-    <div className="flex items-center gap-2">
-      <ShieldCheck className="size-4 text-muted-foreground" />
+    <div className="flex min-w-0 items-center gap-2">
+      <ShieldCheck className="size-4 shrink-0 text-muted-foreground" />
       <Select
         value={maxLevel === null ? OFF : String(maxLevel)}
         onValueChange={(v) =>
           setMaxLevel(v === OFF ? null : (Number(v) as ContentLevel))
         }
       >
-        <SelectTrigger className="h-8 w-auto min-w-[11rem] gap-2 text-xs">
+        {/* Full label needs ~11rem; below sm it shrinks and truncates instead. */}
+        <SelectTrigger className="h-8 w-auto min-w-0 max-w-full gap-2 text-xs sm:min-w-[11rem]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
