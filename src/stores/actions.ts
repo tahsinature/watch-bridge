@@ -14,6 +14,16 @@ export const DEFAULT_ACTIONS: ActionDef[] = [
     enabled: true,
   },
   {
+    id: "tmdb",
+    name: "TMDB",
+    icon: "Clapperboard",
+    type: "open-url",
+    group: "search",
+    // {type} is already "movie" or "tv" — exactly TMDB's URL path segment.
+    template: "https://www.themoviedb.org/{type}/{tmdbId}",
+    enabled: true,
+  },
+  {
     id: "extto",
     name: "extto",
     icon: "Download",
@@ -102,6 +112,21 @@ export const DEFAULT_ACTIONS: ActionDef[] = [
   },
 ];
 
+/**
+ * Bump when a new entry is added to DEFAULT_ACTIONS, and list its id below.
+ * Existing users already have a persisted action list, so new defaults only
+ * reach them through a migration.
+ */
+const STORE_VERSION = 1;
+
+/**
+ * Default action ids introduced in each store version. Migrating adds only
+ * these — defaults the user deliberately deleted stay deleted.
+ */
+const ADDED_IN_VERSION: Record<number, string[]> = {
+  1: ["tmdb"],
+};
+
 interface ActionsState {
   actions: ActionDef[];
   addAction: (action: ActionDef) => void;
@@ -138,6 +163,28 @@ export const useActions = create<ActionsState>()(
       replaceAll: (actions) => set({ actions }),
       resetToDefaults: () => set({ actions: DEFAULT_ACTIONS }),
     }),
-    { name: "watchbridge.actions" },
+    {
+      name: "watchbridge.actions",
+      version: STORE_VERSION,
+
+      /** Append defaults added since the stored list was written. */
+      migrate: (persisted, fromVersion) => {
+        const state = persisted as ActionsState;
+        const actions = Array.isArray(state?.actions)
+          ? state.actions
+          : DEFAULT_ACTIONS;
+
+        const newIds = Object.entries(ADDED_IN_VERSION)
+          .filter(([version]) => Number(version) > fromVersion)
+          .flatMap(([, ids]) => ids);
+
+        const existing = new Set(actions.map((a) => a.id));
+        const additions = DEFAULT_ACTIONS.filter(
+          (a) => newIds.includes(a.id) && !existing.has(a.id),
+        );
+
+        return { ...state, actions: [...actions, ...additions] };
+      },
+    },
   ),
 );

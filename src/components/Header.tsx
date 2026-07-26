@@ -10,6 +10,8 @@ import { PrimaryNav, type View } from "@/components/PrimaryNav";
 interface HeaderProps {
   view: View;
   onViewChange: (view: View) => void;
+  /** Brand click — back to a clean Search view. */
+  onGoHome: () => void;
   shortlistCount: number;
   watchedCount: number;
   onOpenSettings: () => void;
@@ -18,6 +20,7 @@ interface HeaderProps {
 export function Header({
   view,
   onViewChange,
+  onGoHome,
   shortlistCount,
   watchedCount,
   onOpenSettings,
@@ -25,19 +28,24 @@ export function Header({
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95">
       <div className="container flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center border border-primary/30 bg-primary/10 text-primary">
+        <button
+          onClick={onGoHome}
+          aria-label="WatchBridge home"
+          className="group flex items-center gap-2.5 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <span className="grid size-9 place-items-center border border-primary/30 bg-primary/10 text-primary transition-colors group-hover:border-primary/70 group-hover:bg-primary/20">
             <Clapperboard className="size-5" />
           </span>
-          <div className="hidden leading-tight sm:block">
-            <p className="text-base font-bold tracking-tight">
+          {/* Spans, not <p> — a button may only contain phrasing content. */}
+          <span className="hidden leading-tight sm:block">
+            <span className="block text-base font-bold tracking-tight">
               Watch<span className="text-primary">Bridge</span>
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            </span>
+            <span className="block text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               search · compare · act
-            </p>
-          </div>
-        </div>
+            </span>
+          </span>
+        </button>
 
         <PrimaryNav
           view={view}

@@ -17,7 +17,18 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [view, setView] = useState<View>("search");
   const [selected, setSelected] = useState<SelectionRef | null>(null);
+  const [homeKey, setHomeKey] = useState(0);
   const hasApiKey = useHasApiKey();
+
+  /**
+   * Clicking the brand returns to a clean Search view. SearchView owns its
+   * query, so bumping its key remounts it — that's what clears a typed search
+   * when you're already on this view.
+   */
+  const goHome = () => {
+    setView("search");
+    setHomeKey((key) => key + 1);
+  };
 
   const items = useLibrary((s) => s.items);
   const counts = useMemo(
@@ -34,6 +45,7 @@ export default function App() {
         <Header
           view={view}
           onViewChange={setView}
+          onGoHome={goHome}
           shortlistCount={counts.shortlist}
           watchedCount={counts.watched}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -43,7 +55,7 @@ export default function App() {
           {!hasApiKey ? (
             <ApiKeyGate onOpenSettings={() => setSettingsOpen(true)} />
           ) : view === "search" ? (
-            <SearchView onSelect={setSelected} />
+            <SearchView key={homeKey} onSelect={setSelected} />
           ) : view === "shortlist" ? (
             <ShortlistView onSelect={setSelected} />
           ) : (
