@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
-import { Clapperboard, Star, Tv } from "lucide-react";
+import { Clapperboard, Tv } from "lucide-react";
 import { PosterImage } from "@/components/ui/poster-image";
+import { RatingBadge } from "@/components/ui/rating-badge";
 import { ShortlistButton } from "@/components/library/ShortlistButton";
 import { ContentLevelBadge } from "@/components/library/ContentLevelBadge";
-import { useIsOverLimit } from "@/components/library/ContentLevelFilter";
-import { useContentLevel } from "@/stores/content";
-import { formatRating, formatVotes } from "@/lib/format";
+import { useContentLimit } from "@/hooks/useContentLimit";
 import { fromSearchResult } from "@/lib/library";
 import { cn } from "@/lib/utils";
 import type { SearchResult } from "@/types";
@@ -16,19 +15,17 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ result, onSelect }: MovieCardProps) {
-  const rating = formatRating(result.voteAverage);
-  const level = useContentLevel(result.id, result.mediaType);
-  const overLimit = useIsOverLimit(level);
+  const { tooltip, dimClass } = useContentLimit(result.id, result.mediaType);
 
   return (
     <motion.div
       layout
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      title={overLimit ? "Above your content limit" : undefined}
+      title={tooltip}
       className={cn(
         "group relative flex flex-col overflow-hidden border border-border bg-card shadow-md transition-colors hover:border-primary/50",
-        overLimit && "opacity-35 hover:opacity-100",
+        dimClass,
       )}
     >
       <button
@@ -52,25 +49,15 @@ export function MovieCard({ result, onSelect }: MovieCardProps) {
 
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/70 to-transparent" />
 
-        <span className="absolute inset-x-2 bottom-2 flex items-end justify-between gap-1">
-          {rating ? (
-            <span
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-gold"
-              title={`${result.voteCount.toLocaleString()} votes`}
-            >
-              <Star className="size-3 fill-gold text-gold" />
-              {rating}
-              {result.voteCount > 0 && (
-                /* White, not muted — this sits on the poster, not a surface. */
-                <span className="font-normal text-white/70">
-                  ({formatVotes(result.voteCount)})
-                </span>
-              )}
-            </span>
-          ) : (
-            <span />
-          )}
-          <ContentLevelBadge id={result.id} mediaType={result.mediaType} />
+        <span className="absolute inset-x-2 bottom-2 flex items-end gap-1">
+          <RatingBadge
+            average={result.voteAverage}
+            votes={result.voteCount}
+            variant="overlay"
+          />
+          <span className="ml-auto">
+            <ContentLevelBadge id={result.id} mediaType={result.mediaType} />
+          </span>
         </span>
       </button>
 

@@ -1,10 +1,9 @@
 import { motion } from "framer-motion";
-import { Check, Eye, Star, Trash2 } from "lucide-react";
+import { Check, Eye, Trash2 } from "lucide-react";
 import { PosterImage } from "@/components/ui/poster-image";
+import { RatingBadge } from "@/components/ui/rating-badge";
 import { ContentLevelBadge } from "./ContentLevelBadge";
-import { useIsOverLimit } from "./ContentLevelFilter";
-import { useContentLevel } from "@/stores/content";
-import { formatRating, formatVotes } from "@/lib/format";
+import { useContentLimit } from "@/hooks/useContentLimit";
 import { cn } from "@/lib/utils";
 import type { LibraryItem } from "@/types";
 
@@ -25,9 +24,7 @@ export function ShortlistCard({
   onWatched,
   onRemove,
 }: ShortlistCardProps) {
-  const rating = formatRating(item.voteAverage);
-  const level = useContentLevel(item.id, item.mediaType);
-  const overLimit = useIsOverLimit(level);
+  const { tooltip, dimClass } = useContentLimit(item.id, item.mediaType);
 
   return (
     <motion.div
@@ -35,11 +32,11 @@ export function ShortlistCard({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
-      title={overLimit ? "Above your content limit" : undefined}
+      title={tooltip}
       className={cn(
         "group relative flex flex-col overflow-hidden border bg-card shadow-md transition-colors",
         selected ? "border-primary ring-1 ring-primary" : "border-border",
-        overLimit && "opacity-35 hover:opacity-100",
+        dimClass,
       )}
     >
       <button
@@ -51,20 +48,12 @@ export function ShortlistCard({
           alt={item.title}
           className="transition-transform duration-300 group-hover:scale-105"
         />
-        {rating && (
-          <span
-            className="absolute right-2 top-2 inline-flex items-center gap-1 border border-gold/30 bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-gold"
-            title={`${item.voteCount.toLocaleString()} votes`}
-          >
-            <Star className="h-3 w-3 fill-gold text-gold" />
-            {rating}
-            {item.voteCount > 0 && (
-              <span className="font-normal text-white/70">
-                ({formatVotes(item.voteCount)})
-              </span>
-            )}
-          </span>
-        )}
+        <RatingBadge
+          average={item.voteAverage}
+          votes={item.voteCount}
+          variant="chip"
+          className="absolute right-2 top-2"
+        />
         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/70 to-transparent" />
         <span className="absolute bottom-2 right-2">
           <ContentLevelBadge id={item.id} mediaType={item.mediaType} />

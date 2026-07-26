@@ -6,9 +6,10 @@ import { CompareView } from "./CompareView";
 import { WatchedDialog } from "./WatchedDialog";
 import { ContentLevelFilter } from "./ContentLevelFilter";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useLibrary } from "@/stores/library";
 import { toast } from "@/stores/toast";
-import { itemKey } from "@/lib/library";
+import { itemKey, toSelectionRef } from "@/lib/library";
 import type { LibraryItem, SelectionRef } from "@/types";
 
 const MAX_COMPARE = 4;
@@ -49,7 +50,11 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
 
   if (shortlist.length === 0) {
     return (
-      <EmptyShortlist />
+      <EmptyState
+        icon={ListPlus}
+        title="Your shortlist is empty"
+        detail="Search for titles and tap the bookmark to line them up here for comparison."
+      />
     );
   }
 
@@ -85,9 +90,7 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
               item={item}
               selected={selected.has(itemKey(item.id, item.mediaType))}
               onToggleSelect={() => toggleSelect(item)}
-              onOpen={() =>
-                onSelect({ id: item.id, mediaType: item.mediaType, title: item.title })
-              }
+              onOpen={() => onSelect(toSelectionRef(item))}
               onWatched={() => setWatchedTarget(item)}
               onRemove={() => remove(item.id, item.mediaType)}
             />
@@ -102,7 +105,7 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
         onRemoveItem={(item) => toggleSelect(item)}
         onOpenDetail={(item) => {
           setCompareOpen(false);
-          onSelect({ id: item.id, mediaType: item.mediaType, title: item.title });
+          onSelect(toSelectionRef(item));
         }}
       />
 
@@ -117,23 +120,6 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
           }
         }}
       />
-    </div>
-  );
-}
-
-function EmptyShortlist() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/25">
-        <ListPlus className="h-7 w-7" />
-      </span>
-      <div>
-        <p className="text-lg font-semibold">Your shortlist is empty</p>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          Search for titles and tap the bookmark to line them up here for
-          comparison.
-        </p>
-      </div>
     </div>
   );
 }

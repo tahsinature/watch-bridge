@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { itemKey } from "@/lib/library";
+import { sameTitle } from "@/lib/library";
 import type { LibraryItem, MediaType, TitleDetails } from "@/types";
 
 interface LibraryState {
@@ -22,41 +22,35 @@ export const useLibrary = create<LibraryState>()(
 
       addToShortlist: (item) =>
         set((s) => {
-          const key = itemKey(item.id, item.mediaType);
-          if (s.items.some((i) => itemKey(i.id, i.mediaType) === key)) return s;
+          if (s.items.some((i) => sameTitle(i, item))) return s;
           return { items: [...s.items, { ...item, status: "shortlist" }] };
         }),
 
       remove: (id, mediaType) =>
         set((s) => ({
-          items: s.items.filter(
-            (i) => itemKey(i.id, i.mediaType) !== itemKey(id, mediaType),
-          ),
+          items: s.items.filter((i) => !sameTitle(i, { id, mediaType })),
         })),
 
       update: (id, mediaType, patch) =>
         set((s) => ({
           items: s.items.map((i) =>
-            itemKey(i.id, i.mediaType) === itemKey(id, mediaType)
-              ? { ...i, ...patch }
-              : i,
+            sameTitle(i, { id, mediaType }) ? { ...i, ...patch } : i,
           ),
         })),
 
       markWatched: (item, userRating, notes) =>
         set((s) => {
-          const key = itemKey(item.id, item.mediaType);
           const patch = {
             status: "watched" as const,
             userRating,
             notes,
             watchedAt: Date.now(),
           };
-          const exists = s.items.some((i) => itemKey(i.id, i.mediaType) === key);
+          const exists = s.items.some((i) => sameTitle(i, item));
           if (exists) {
             return {
               items: s.items.map((i) =>
-                itemKey(i.id, i.mediaType) === key ? { ...i, ...patch } : i,
+                sameTitle(i, item) ? { ...i, ...patch } : i,
               ),
             };
           }
@@ -66,7 +60,7 @@ export const useLibrary = create<LibraryState>()(
       returnToShortlist: (id, mediaType) =>
         set((s) => ({
           items: s.items.map((i) =>
-            itemKey(i.id, i.mediaType) === itemKey(id, mediaType)
+            sameTitle(i, { id, mediaType })
               ? { ...i, status: "shortlist", watchedAt: null }
               : i,
           ),
@@ -97,9 +91,7 @@ export const useLibrary = create<LibraryState>()(
 export function useSyncLibraryRating(details: TitleDetails): void {
   const update = useLibrary((s) => s.update);
   const stored = useLibrary((s) =>
-    s.items.find(
-      (i) => itemKey(i.id, i.mediaType) === itemKey(details.id, details.mediaType),
-    ),
+    s.items.find((i) => sameTitle(i, details)),
   );
   const isStale =
     stored !== undefined &&
@@ -117,7 +109,5 @@ export function useSyncLibraryRating(details: TitleDetails): void {
 
 /** Reactive helper: is this title already in the library? */
 export function useInLibrary(id: number, mediaType: MediaType): boolean {
-  return useLibrary((s) =>
-    s.items.some((i) => itemKey(i.id, i.mediaType) === itemKey(id, mediaType)),
-  );
+  return useLibrary((s) => s.items.some((i) => sameTitle(i, { id, mediaType })));
 }

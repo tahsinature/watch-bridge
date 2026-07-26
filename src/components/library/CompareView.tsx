@@ -1,4 +1,4 @@
-import { Clock, Star, X } from "lucide-react";
+import { Clock, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { PosterImage } from "@/components/ui/poster-image";
+import { RatingBadge } from "@/components/ui/rating-badge";
 import { StarRating } from "@/components/ui/star-rating";
 import { useDetails } from "@/hooks/useTmdb";
-import { formatRating, formatRuntime, formatVotes } from "@/lib/format";
+import { formatRuntime } from "@/lib/format";
 import type { LibraryItem } from "@/types";
 
 interface CompareViewProps {
@@ -68,7 +69,7 @@ function CompareColumn({
   const overview = data?.overview || item.overview;
   // Vote count only exists on the fetched details, so read the average from
   // there too — a stored average beside a fresh count could disagree.
-  const rating = formatRating(data?.voteAverage ?? item.voteAverage);
+  const voteAverage = data?.voteAverage ?? item.voteAverage;
   const voteCount = data?.voteCount ?? 0;
 
   return (
@@ -99,20 +100,7 @@ function CompareColumn({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          {rating && (
-            <span className="inline-flex items-center gap-1 font-semibold text-gold">
-              <Star className="h-3.5 w-3.5 fill-gold" />
-              {rating}
-            </span>
-          )}
-          {voteCount > 0 && (
-            <span
-              className="text-muted-foreground"
-              title={`${voteCount.toLocaleString()} votes`}
-            >
-              ({formatVotes(voteCount)})
-            </span>
-          )}
+          <RatingBadge average={voteAverage} votes={voteCount} />
           {runtime && (
             <span className="inline-flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />

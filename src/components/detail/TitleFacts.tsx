@@ -1,15 +1,10 @@
-import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RatingBadge } from "@/components/ui/rating-badge";
 import { CopyTextButton } from "@/components/ui/copy-text-button";
 import { LabeledBlock, LabeledRow } from "./LabeledRow";
 import { ContentLevelPicker } from "./ContentLevelPicker";
 import { useSettings } from "@/stores/settings";
-import {
-  formatRating,
-  formatReleaseSpan,
-  formatRuntime,
-  formatVotes,
-} from "@/lib/format";
+import { formatRating, formatReleaseSpan, formatRuntime } from "@/lib/format";
 import type { TitleDetails } from "@/types";
 
 /** Key facts as labeled rows — scannable and comparable across titles. */
@@ -72,13 +67,11 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
 
       {rating && (
         <LabeledRow label="Rating">
-          <span className="flex items-center gap-2 text-sm">
-            <Star className="size-4 fill-gold text-gold" />
-            <span className="font-semibold text-gold">{rating}</span>
-            <span className="text-muted-foreground">
-              ({formatVotes(details.voteCount)} votes)
-            </span>
-          </span>
+          <RatingBadge
+            average={details.voteAverage}
+            votes={details.voteCount}
+            variant="detail"
+          />
         </LabeledRow>
       )}
 

@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
 import { ActionsPanel } from "./ActionsPanel";
@@ -46,7 +47,14 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
         {/* min-h-0 lets this row shrink inside the grid so it can scroll. */}
         <div className="min-h-0 overflow-y-auto scrollbar-thin">
           {isLoading && <DetailSkeleton />}
-          {error && <DetailError message={(error as Error).message} />}
+          {error && (
+            <EmptyState
+              icon={AlertCircle}
+              tone="error"
+              title="Couldn't load details"
+              detail={(error as Error).message}
+            />
+          )}
           {data && <DetailBody details={data} />}
         </div>
 
@@ -183,20 +191,6 @@ function DetailSkeleton() {
         <Skeleton className="h-6 w-2/3" />
         <Skeleton className="h-20 w-full" />
         <Skeleton className="aspect-video w-full rounded-xl" />
-      </div>
-    </div>
-  );
-}
-
-function DetailError({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 px-6 py-24 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-secondary">
-        <AlertCircle className="h-8 w-8 text-destructive" />
-      </span>
-      <div>
-        <p className="font-semibold">Couldn&rsquo;t load details</p>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
   );

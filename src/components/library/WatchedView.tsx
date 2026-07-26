@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Eye, NotebookPen, Pencil, Trash2, Undo2 } from "lucide-react";
 import { WatchedDialog } from "./WatchedDialog";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PosterImage } from "@/components/ui/poster-image";
 import { StarRating } from "@/components/ui/star-rating";
 import {
@@ -14,7 +15,7 @@ import { useLibrary } from "@/stores/library";
 import { useSettings } from "@/stores/settings";
 import { toast } from "@/stores/toast";
 import { logToNotion } from "@/lib/notion";
-import { formatDate, itemKey } from "@/lib/library";
+import { formatDate, itemKey, toSelectionRef } from "@/lib/library";
 import type { LibraryItem, SelectionRef } from "@/types";
 
 export function WatchedView({ onSelect }: { onSelect: (ref: SelectionRef) => void }) {
@@ -34,7 +35,15 @@ export function WatchedView({ onSelect }: { onSelect: (ref: SelectionRef) => voi
 
   const [editTarget, setEditTarget] = useState<LibraryItem | null>(null);
 
-  if (watched.length === 0) return <EmptyWatched />;
+  if (watched.length === 0) {
+    return (
+      <EmptyState
+        icon={Eye}
+        title="Nothing logged yet"
+        detail="Mark titles as watched to rate them, jot notes, and log them to Notion."
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -51,9 +60,7 @@ export function WatchedView({ onSelect }: { onSelect: (ref: SelectionRef) => voi
             <WatchedRow
               key={itemKey(item.id, item.mediaType)}
               item={item}
-              onOpen={() =>
-                onSelect({ id: item.id, mediaType: item.mediaType, title: item.title })
-              }
+              onOpen={() => onSelect(toSelectionRef(item))}
               onEdit={() => setEditTarget(item)}
               onNotion={() => void logToNotion(item, notionUrl)}
               onReturn={() => {
@@ -173,21 +180,5 @@ function RowAction({
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
-  );
-}
-
-function EmptyWatched() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-secondary text-primary">
-        <Eye className="h-7 w-7" />
-      </span>
-      <div>
-        <p className="text-lg font-semibold">Nothing logged yet</p>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          Mark titles as watched to rate them, jot notes, and log them to Notion.
-        </p>
-      </div>
-    </div>
   );
 }

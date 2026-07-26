@@ -6,8 +6,10 @@ import { RecentSearches } from "./RecentSearches";
 import { RecentTitles } from "./RecentTitles";
 import { SortSelect } from "./SortSelect";
 import { ContentLevelFilter } from "@/components/library/ContentLevelFilter";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useSearch } from "@/hooks/useTmdb";
 import { useDebounce } from "@/hooks/useDebounce";
+import { toSelectionRef } from "@/lib/library";
 import { sortResults } from "@/lib/sort";
 import { useRecentSearches } from "@/stores/recent";
 import { useRecentTitles } from "@/stores/recentTitles";
@@ -44,11 +46,7 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
       year: result.year,
       posterPath: result.posterPath,
     });
-    onSelect({
-      id: result.id,
-      mediaType: result.mediaType,
-      title: result.title,
-    });
+    onSelect(toSelectionRef(result));
   };
 
   return (
@@ -77,13 +75,14 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
           onSelect={openResult}
         />
       ) : (
-        <EmptyState onPick={setInput} onSelect={onSelect} />
+        <SearchHome onPick={setInput} onSelect={onSelect} />
       )}
     </div>
   );
 }
 
-function EmptyState({
+/** The home screen: what you see before typing anything. */
+function SearchHome({
   onPick,
   onSelect,
 }: {
@@ -94,30 +93,15 @@ function EmptyState({
   const hasRecentTitles = useRecentTitles((s) => s.titles.length > 0);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 py-14 text-center">
-      <div className="flex flex-col items-center gap-4">
-        <span className="grid size-14 place-items-center border border-primary/30 bg-primary/10 text-primary">
-          <Sparkles className="size-7" />
-        </span>
-        <div>
-          <p className="text-lg font-semibold">Start typing to explore</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Search any film or series to see posters, trailers and quick facts.
-          </p>
-        </div>
-      </div>
-
+    <EmptyState
+      icon={Sparkles}
+      title="Start typing to explore"
+      detail="Search any film or series to see posters, trailers and quick facts."
+      className="gap-8 py-14"
+    >
       <RecentSearches onPick={onPick} />
 
-      <RecentTitles
-        onPick={(title) =>
-          onSelect({
-            id: title.id,
-            mediaType: title.mediaType,
-            title: title.title,
-          })
-        }
-      />
+      <RecentTitles onPick={(title) => onSelect(toSelectionRef(title))} />
 
       {/* Examples are training wheels — retire them once there's history. */}
       {!hasRecentSearches && !hasRecentTitles && (
@@ -133,6 +117,6 @@ function EmptyState({
           ))}
         </div>
       )}
-    </div>
+    </EmptyState>
   );
 }

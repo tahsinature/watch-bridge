@@ -41,9 +41,3 @@ export function ContentLevelFilter() {
     </div>
   );
 }
-
-/** True when a rated title exceeds the configured limit. */
-export function useIsOverLimit(level: ContentLevel | undefined): boolean {
-  const maxLevel = useSettings((s) => s.maxContentLevel);
-  return maxLevel !== null && level !== undefined && level > maxLevel;
-}

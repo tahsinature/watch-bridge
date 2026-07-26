@@ -1,8 +1,29 @@
-import type { LibraryItem, MediaType, SearchResult, TitleDetails } from "@/types";
+import type {
+  LibraryItem,
+  MediaType,
+  SearchResult,
+  SelectionRef,
+  TitleDetails,
+} from "@/types";
 
-/** Stable composite key for a title across the app. */
+/** Stable composite key for a title — for map keys and URLs. */
 export function itemKey(id: number, mediaType: MediaType): string {
   return `${mediaType}-${id}`;
+}
+
+type TitleRef = { id: number; mediaType: MediaType };
+
+/**
+ * Do two references point at the same title? Compares fields directly rather
+ * than building two `itemKey` strings, which matters inside array scans.
+ */
+export function sameTitle(a: TitleRef, b: TitleRef): boolean {
+  return a.id === b.id && a.mediaType === b.mediaType;
+}
+
+/** Narrow any title-shaped object down to what the detail view needs. */
+export function toSelectionRef(item: TitleRef & { title: string }): SelectionRef {
+  return { id: item.id, mediaType: item.mediaType, title: item.title };
 }
 
 const baseItem = {

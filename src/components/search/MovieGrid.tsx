@@ -1,5 +1,6 @@
 import { AlertCircle, SearchX } from "lucide-react";
 import { MovieCard } from "./MovieCard";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchResult } from "@/types";
 
@@ -37,8 +38,9 @@ export function MovieGrid({
 
   if (error) {
     return (
-      <StateMessage
-        icon={<AlertCircle className="h-8 w-8 text-destructive" />}
+      <EmptyState
+        icon={AlertCircle}
+        tone="error"
         title="Something went wrong"
         detail={error.message}
       />
@@ -47,8 +49,8 @@ export function MovieGrid({
 
   if (query.trim().length > 1 && results.length === 0) {
     return (
-      <StateMessage
-        icon={<SearchX className="h-8 w-8 text-muted-foreground" />}
+      <EmptyState
+        icon={SearchX}
         title={`No results for "${query}"`}
         detail="Try a different spelling or a shorter title."
       />
@@ -64,28 +66,6 @@ export function MovieGrid({
           onSelect={onSelect}
         />
       ))}
-    </div>
-  );
-}
-
-function StateMessage({
-  icon,
-  title,
-  detail,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  detail: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-secondary">
-        {icon}
-      </span>
-      <div>
-        <p className="font-semibold">{title}</p>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{detail}</p>
-      </div>
     </div>
   );
 }
