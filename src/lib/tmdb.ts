@@ -1,7 +1,9 @@
+import { itemKey } from "@/lib/library";
 import type {
   CastMember,
   CountryProviders,
   MediaType,
+  PersonDetails,
   SearchResult,
   TitleDetails,
   Trailer,
@@ -101,6 +103,24 @@ interface RawSearchItem {
   vote_count?: number;
 }
 
+function toSearchResult(r: RawSearchItem): SearchResult {
+  return {
+    id: r.id,
+    mediaType: r.media_type as MediaType,
+    title: r.title ?? r.name ?? "Untitled",
+    year: yearOf(r.release_date ?? r.first_air_date),
+    releaseDate: r.release_date ?? r.first_air_date ?? "",
+    overview: r.overview ?? "",
+    posterPath: r.poster_path ?? null,
+    backdropPath: r.backdrop_path ?? null,
+    voteAverage: r.vote_average ?? 0,
+    voteCount: r.vote_count ?? 0,
+  };
+}
+
+const isTitle = (r: RawSearchItem) =>
+  r.media_type === "movie" || r.media_type === "tv";
+
 export async function searchMulti(
   apiKey: string,
   query: string,
@@ -113,20 +133,7 @@ export async function searchMulti(
     }),
   );
 
-  return data.results
-    .filter((r) => r.media_type === "movie" || r.media_type === "tv")
-    .map((r) => ({
-      id: r.id,
-      mediaType: r.media_type as MediaType,
-      title: r.title ?? r.name ?? "Untitled",
-      year: yearOf(r.release_date ?? r.first_air_date),
-      releaseDate: r.release_date ?? r.first_air_date ?? "",
-      overview: r.overview ?? "",
-      posterPath: r.poster_path ?? null,
-      backdropPath: r.backdrop_path ?? null,
-      voteAverage: r.vote_average ?? 0,
-      voteCount: r.vote_count ?? 0,
-    }));
+  return data.results.filter(isTitle).map(toSearchResult);
 }
 
 // ---- Details --------------------------------------------------------------
@@ -193,6 +200,7 @@ interface RawVideo {
   official: boolean;
 }
 interface RawCast {
+  id: number;
   name: string;
   character?: string;
   profile_path?: string | null;
@@ -225,6 +233,7 @@ function normalizeTrailers(videos?: RawVideo[]): Trailer[] {
 
 function normalizeCast(cast?: RawCast[]): CastMember[] {
   return (cast ?? []).slice(0, 12).map((c) => ({
+    id: c.id,
     name: c.name,
     character: c.character ?? "",
     profilePath: c.profile_path ?? null,
@@ -324,5 +333,53 @@ export async function getDetails(
     numberOfEpisodes: d.number_of_episodes ?? null,
     watchProviders: normalizeWatchProviders(d["watch/providers"]?.results),
     certifications: normalizeCertifications(d),
+  };
+}
+
+// ---- People ---------------------------------------------------------------
+
+interface RawPerson {
+  id: number;
+  name: string;
+  profile_path?: string | null;
+  known_for_department?: string;
+  biography?: string;
+  combined_credits?: { cast?: RawSearchItem[] };
+}
+
+/**
+ * TMDB lists one entry per role, so a recurring part shows up once per season
+ * and an actor with a bit part appears beside their lead work. Dedupe by
+ * title, then rank by vote count so the notable credits lead and one-episode
+ * guest spots fall to the tail.
+ */
+function normalizeCredits(cast?: RawSearchItem[]): SearchResult[] {
+  const seen = new Map<string, SearchResult>();
+  for (const raw of cast ?? []) {
+    if (!isTitle(raw)) continue;
+    const credit = toSearchResult(raw);
+    const key = itemKey(credit.id, credit.mediaType);
+    if (!seen.has(key)) seen.set(key, credit);
+  }
+  return [...seen.values()].sort((a, b) => b.voteCount - a.voteCount);
+}
+
+export async function getPerson(
+  apiKey: string,
+  id: number,
+): Promise<PersonDetails> {
+  const d = await tmdbFetch<RawPerson>(
+    buildUrl(`/person/${id}`, apiKey, {
+      append_to_response: "combined_credits",
+    }),
+  );
+
+  return {
+    id: d.id,
+    name: d.name,
+    profilePath: d.profile_path ?? null,
+    knownForDepartment: d.known_for_department ?? "",
+    biography: d.biography ?? "",
+    credits: normalizeCredits(d.combined_credits?.cast),
   };
 }

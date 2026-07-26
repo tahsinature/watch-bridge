@@ -107,9 +107,26 @@ export interface Trailer {
 }
 
 export interface CastMember {
+  /** TMDB person id — used to open their filmography. */
+  id: number;
   name: string;
   character: string;
   profilePath: string | null;
+}
+
+/** A person, with the titles they acted in. */
+export interface PersonDetails {
+  id: number;
+  name: string;
+  profilePath: string | null;
+  /** e.g. "Acting", "Directing". */
+  knownForDepartment: string;
+  biography: string;
+  /**
+   * Acting credits, most-voted first. Deliberately SearchResult-shaped so the
+   * existing result cards render them without a parallel component.
+   */
+  credits: SearchResult[];
 }
 
 export interface WatchProvider {

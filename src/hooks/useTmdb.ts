@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDetails, searchMulti } from "@/lib/tmdb";
+import { getDetails, getPerson, searchMulti } from "@/lib/tmdb";
 import { useSettings } from "@/stores/settings";
 import type { MediaType } from "@/types";
 
@@ -25,5 +25,15 @@ export function useDetails(
     queryKey: ["details", mediaType, id, apiKey],
     queryFn: () => getDetails(apiKey, mediaType!, id!),
     enabled: enabled && apiKey.length > 0 && !!mediaType && !!id,
+  });
+}
+
+export function usePerson(id: number | undefined, enabled: boolean) {
+  const apiKey = useSettings((s) => s.tmdbApiKey);
+
+  return useQuery({
+    queryKey: ["person", id, apiKey],
+    queryFn: () => getPerson(apiKey, id!),
+    enabled: enabled && apiKey.length > 0 && !!id,
   });
 }

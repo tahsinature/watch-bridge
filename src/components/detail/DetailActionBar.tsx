@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LibraryActions } from "./LibraryActions";
+import { cn } from "@/lib/utils";
 import type { TitleDetails } from "@/types";
 
 /**
@@ -8,12 +9,14 @@ import type { TitleDetails } from "@/types";
  * viewport, so there's no backdrop left to click for dismissal — Close has to
  * be permanently in reach, and the library actions earn their place beside it
  * rather than sitting below two sections of metadata.
+ *
+ * `details` is omitted by the person sheet, which has nothing to shortlist.
  */
 export function DetailActionBar({
   details,
   onClose,
 }: {
-  details: TitleDetails;
+  details?: TitleDetails;
   onClose: () => void;
 }) {
   return (
@@ -22,8 +25,12 @@ export function DetailActionBar({
         /* Bottom padding clears the home indicator on phones that have one. */
         className="mx-auto flex max-w-3xl flex-col gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3"
       >
-        <LibraryActions details={details} />
-        <Button variant="secondary" onClick={onClose} className="w-full sm:w-auto">
+        {details && <LibraryActions details={details} />}
+        <Button
+          variant="secondary"
+          onClick={onClose}
+          className={cn("w-full sm:w-auto", !details && "sm:ml-auto")}
+        >
           <X className="size-4" />
           Close
         </Button>

@@ -2,7 +2,12 @@ import { User } from "lucide-react";
 import { posterUrl } from "@/lib/tmdb";
 import type { CastMember } from "@/types";
 
-export function CastStrip({ cast }: { cast: CastMember[] }) {
+interface CastStripProps {
+  cast: CastMember[];
+  onSelectPerson: (personId: number) => void;
+}
+
+export function CastStrip({ cast, onSelectPerson }: CastStripProps) {
   if (cast.length === 0) return null;
 
   return (
@@ -10,11 +15,13 @@ export function CastStrip({ cast }: { cast: CastMember[] }) {
       {cast.map((member, index) => {
         const photo = posterUrl(member.profilePath, "w185");
         return (
-          <div
-            key={`${member.name}-${index}`}
-            className="flex w-20 shrink-0 flex-col items-center text-center"
+          <button
+            key={`${member.id}-${index}`}
+            onClick={() => onSelectPerson(member.id)}
+            title={`See what ${member.name} is in`}
+            className="group/cast flex w-20 shrink-0 flex-col items-center text-center"
           >
-            <div className="size-20 overflow-hidden border border-border bg-secondary grayscale transition-all hover:grayscale-0">
+            <div className="size-20 overflow-hidden border border-border bg-secondary grayscale transition-all group-hover/cast:border-primary/60 group-hover/cast:grayscale-0">
               {photo ? (
                 <img
                   src={photo}
@@ -36,7 +43,7 @@ export function CastStrip({ cast }: { cast: CastMember[] }) {
                 {member.character}
               </p>
             )}
-          </div>
+          </button>
         );
       })}
     </div>

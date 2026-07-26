@@ -6,7 +6,10 @@ const VIEWS: View[] = ["search", "shortlist", "watched"];
 
 interface UrlState {
   view: View;
+  /** Open title, if any. Never set at the same time as `person`. */
   selection: SelectionRef | null;
+  /** Open person's TMDB id, if any. */
+  person: number | null;
 }
 
 /**
@@ -30,19 +33,29 @@ function parseSelection(raw: string | null): SelectionRef | null {
   return Number.isInteger(id) && id > 0 ? { id, mediaType } : null;
 }
 
+function parsePerson(raw: string | null): number | null {
+  const id = Number(raw);
+  return raw && Number.isInteger(id) && id > 0 ? id : null;
+}
+
 function readUrl(): UrlState {
   const params = new URLSearchParams(window.location.search);
+  // Only one detail sheet is ever open; a hand-edited URL with both defers
+  // to the person rather than stacking two sheets.
+  const person = parsePerson(params.get("person"));
   return {
     view: parseView(params.get("view")),
-    selection: parseSelection(params.get("title")),
+    selection: person === null ? parseSelection(params.get("title")) : null,
+    person,
   };
 }
 
 /** Only non-default values are written, so the home screen URL stays bare. */
-function toUrl({ view, selection }: UrlState): string {
+function toUrl({ view, selection, person }: UrlState): string {
   const params = new URLSearchParams();
   if (view !== "search") params.set("view", view);
-  if (selection) params.set("title", itemKey(selection.id, selection.mediaType));
+  if (person !== null) params.set("person", String(person));
+  else if (selection) params.set("title", itemKey(selection.id, selection.mediaType));
   const query = params.toString();
   return query ? `?${query}` : window.location.pathname;
 }
@@ -70,29 +83,46 @@ export function useUrlState() {
   }, []);
 
   const setView = useCallback(
-    (view: View) => push({ view, selection: null }),
+    (view: View) => push({ view, selection: null, person: null }),
     [push],
   );
 
+  /** Shared by both sheets: how a detail view gets dismissed. */
+  const closeDetail = useCallback(() => {
+    if (window.history.state?.watchBridge) {
+      // We pushed this entry, so stepping back closes the sheet and leaves
+      // Forward able to reopen it. popstate syncs the state.
+      window.history.back();
+      return;
+    }
+    // Landed here directly — drop the param without growing history.
+    const next = { view: state.view, selection: null, person: null };
+    setState(next);
+    window.history.replaceState(null, "", toUrl(next));
+  }, [state.view]);
+
   const setSelection = useCallback(
     (selection: SelectionRef | null) => {
-      if (selection) {
-        push({ view: state.view, selection });
-        return;
-      }
-      if (window.history.state?.watchBridge) {
-        // We pushed this entry, so stepping back both closes the title and
-        // leaves Forward able to reopen it. popstate syncs the state.
-        window.history.back();
-        return;
-      }
-      // Landed here directly — drop the param without growing history.
-      const next = { view: state.view, selection: null };
-      setState(next);
-      window.history.replaceState(null, "", toUrl(next));
+      if (!selection) return closeDetail();
+      push({ view: state.view, selection, person: null });
     },
-    [push, state.view],
+    [push, closeDetail, state.view],
   );
 
-  return { view: state.view, selection: state.selection, setView, setSelection };
+  const setPerson = useCallback(
+    (person: number | null) => {
+      if (person === null) return closeDetail();
+      push({ view: state.view, selection: null, person });
+    },
+    [push, closeDetail, state.view],
+  );
+
+  return {
+    view: state.view,
+    selection: state.selection,
+    person: state.person,
+    setView,
+    setSelection,
+    setPerson,
+  };
 }

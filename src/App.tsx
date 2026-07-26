@@ -8,6 +8,7 @@ import { SearchView } from "@/components/search/SearchView";
 import { ShortlistView } from "@/components/library/ShortlistView";
 import { WatchedView } from "@/components/library/WatchedView";
 import { MovieDetail } from "@/components/detail/MovieDetail";
+import { PersonDetail } from "@/components/detail/PersonDetail";
 import { useUrlState } from "@/hooks/useUrlState";
 import { useHasApiKey } from "@/stores/settings";
 import { useLibrary } from "@/stores/library";
@@ -15,7 +16,8 @@ import { useLibrary } from "@/stores/library";
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [homeKey, setHomeKey] = useState(0);
-  const { view, selection, setView, setSelection } = useUrlState();
+  const { view, selection, person, setView, setSelection, setPerson } =
+    useUrlState();
   const hasApiKey = useHasApiKey();
 
   /**
@@ -61,7 +63,16 @@ export default function App() {
           )}
         </main>
 
-        <MovieDetail selected={selection} onClose={() => setSelection(null)} />
+        <MovieDetail
+          selected={selection}
+          onClose={() => setSelection(null)}
+          onSelectPerson={setPerson}
+        />
+        <PersonDetail
+          personId={person}
+          onClose={() => setPerson(null)}
+          onSelectTitle={setSelection}
+        />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <Toaster />
       </div>

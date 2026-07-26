@@ -22,9 +22,14 @@ import type { SelectionRef, TitleDetails } from "@/types";
 interface MovieDetailProps {
   selected: SelectionRef | null;
   onClose: () => void;
+  onSelectPerson: (personId: number) => void;
 }
 
-export function MovieDetail({ selected, onClose }: MovieDetailProps) {
+export function MovieDetail({
+  selected,
+  onClose,
+  onSelectPerson,
+}: MovieDetailProps) {
   const { data, isLoading, error } = useDetails(
     selected?.mediaType,
     selected?.id,
@@ -55,7 +60,7 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
               detail={(error as Error).message}
             />
           )}
-          {data && <DetailBody details={data} />}
+          {data && <DetailBody details={data} onSelectPerson={onSelectPerson} />}
         </div>
 
         {data && <DetailActionBar details={data} onClose={onClose} />}
@@ -64,7 +69,13 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
   );
 }
 
-function DetailBody({ details }: { details: TitleDetails }) {
+function DetailBody({
+  details,
+  onSelectPerson,
+}: {
+  details: TitleDetails;
+  onSelectPerson: (personId: number) => void;
+}) {
   const backdrop = backdropUrl(details.backdropPath, "w1280");
   const heroPoster = posterUrl(details.posterPath, "w342");
 
@@ -132,7 +143,7 @@ function DetailBody({ details }: { details: TitleDetails }) {
       <div className="mx-auto flex max-w-3xl flex-col gap-7 px-6 pt-5">
         {details.cast.length > 0 && (
           <Section title="Cast">
-            <CastStrip cast={details.cast} />
+            <CastStrip cast={details.cast} onSelectPerson={onSelectPerson} />
           </Section>
         )}
 
