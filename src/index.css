@@ -1,0 +1,123 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Terminal-brutalist theme: near-black surfaces, hairline borders, zero
+   * radius, coral accent. Monospace throughout — type is part of the identity.
+   */
+  :root {
+    --background: 225 20% 4%; /* #08090c */
+    --foreground: 228 12% 92%; /* #e8e9ed */
+
+    --card: 227 19% 9%; /* #13151c */
+    --card-foreground: 228 12% 92%;
+
+    --popover: 225 21% 7%; /* #0f1117 */
+    --popover-foreground: 228 12% 92%;
+
+    --primary: 0 100% 65%; /* coral #ff4d4d */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 225 21% 11%;
+    --secondary-foreground: 228 12% 92%;
+
+    --muted: 225 18% 12%;
+    --muted-foreground: 228 6% 51%; /* #7a7d89 */
+
+    --accent: 0 60% 18%;
+    --accent-foreground: 228 12% 92%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Star ratings keep a warm amber — gold stars are a strong convention. */
+    --gold: 38 92% 56%;
+    --gold-foreground: 38 40% 10%;
+
+    /* Cyan marks cross-country availability; green marks positive states. */
+    --cyan: 173 100% 45%; /* #00e5cc */
+    --cyan-foreground: 173 60% 8%;
+    --success: 142 71% 45%; /* #22c55e */
+
+    /* Faintest hairline that still reads on card surfaces. */
+    --border: 228 15% 15%;
+    --input: 228 15% 18%;
+    --ring: 0 100% 65%;
+
+    --radius: 0px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-variant-ligatures: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle vignette instead of colored ambient glows. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(80rem 50rem at 50% -20%, hsl(0 100% 65% / 0.05), transparent 65%),
+      radial-gradient(60rem 40rem at 100% 100%, hsl(173 100% 45% / 0.03), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Monospace headings, tightened for display use. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Kept for API compatibility — now a flat elevated surface, no blur. */
+  .glass {
+    background: hsl(var(--popover));
+  }
+
+  /* Eyebrow: short coral rule + tracked uppercase micro-label. */
+  .eyebrow {
+    @apply flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-primary;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 1.5rem;
+    height: 1px;
+    background: hsl(var(--primary));
+    flex-shrink: 0;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
