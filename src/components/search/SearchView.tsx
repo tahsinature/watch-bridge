@@ -3,10 +3,12 @@ import { Sparkles } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { MovieGrid } from "./MovieGrid";
 import { RecentSearches } from "./RecentSearches";
+import { RecentTitles } from "./RecentTitles";
 import { ContentLevelFilter } from "@/components/library/ContentLevelFilter";
 import { useSearch } from "@/hooks/useTmdb";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRecentSearches } from "@/stores/recent";
+import { useRecentTitles } from "@/stores/recentTitles";
 import type { SearchResult, SelectionRef } from "@/types";
 
 const EXAMPLES = ["Dune", "Breaking Bad", "Oppenheimer", "The Bear", "Interstellar"];
@@ -23,6 +25,22 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
   useEffect(() => {
     if (data && data.length > 0) record(query);
   }, [data, query, record]);
+
+  const recordTitle = useRecentTitles((s) => s.record);
+  const openResult = (result: SearchResult) => {
+    recordTitle({
+      id: result.id,
+      mediaType: result.mediaType,
+      title: result.title,
+      year: result.year,
+      posterPath: result.posterPath,
+    });
+    onSelect({
+      id: result.id,
+      mediaType: result.mediaType,
+      title: result.title,
+    });
+  };
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
@@ -46,23 +64,24 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
           loading={isLoading}
           error={(error as Error) ?? null}
           query={query}
-          onSelect={(result: SearchResult) =>
-            onSelect({
-              id: result.id,
-              mediaType: result.mediaType,
-              title: result.title,
-            })
-          }
+          onSelect={openResult}
         />
       ) : (
-        <EmptyState onPick={setInput} />
+        <EmptyState onPick={setInput} onSelect={onSelect} />
       )}
     </div>
   );
 }
 
-function EmptyState({ onPick }: { onPick: (value: string) => void }) {
-  const hasRecent = useRecentSearches((s) => s.queries.length > 0);
+function EmptyState({
+  onPick,
+  onSelect,
+}: {
+  onPick: (value: string) => void;
+  onSelect: (ref: SelectionRef) => void;
+}) {
+  const hasRecentSearches = useRecentSearches((s) => s.queries.length > 0);
+  const hasRecentTitles = useRecentTitles((s) => s.titles.length > 0);
 
   return (
     <div className="flex flex-col items-center justify-center gap-8 py-14 text-center">
@@ -80,8 +99,18 @@ function EmptyState({ onPick }: { onPick: (value: string) => void }) {
 
       <RecentSearches onPick={onPick} />
 
+      <RecentTitles
+        onPick={(title) =>
+          onSelect({
+            id: title.id,
+            mediaType: title.mediaType,
+            title: title.title,
+          })
+        }
+      />
+
       {/* Examples are training wheels — retire them once there's history. */}
-      {!hasRecent && (
+      {!hasRecentSearches && !hasRecentTitles && (
         <div className="flex flex-wrap justify-center gap-2">
           {EXAMPLES.map((example) => (
             <button

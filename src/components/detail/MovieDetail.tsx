@@ -111,6 +111,12 @@ function DetailBody({ details }: { details: TitleDetails }) {
 
       {/* Body */}
       <div className="flex flex-col gap-7 px-6 pt-5">
+        {details.cast.length > 0 && (
+          <Section title="Cast">
+            <CastStrip cast={details.cast} />
+          </Section>
+        )}
+
         <Section title="Details">
           <TitleFacts details={details} />
         </Section>
@@ -120,12 +126,6 @@ function DetailBody({ details }: { details: TitleDetails }) {
         </Section>
 
         <WhereToWatch details={details} />
-
-        {details.cast.length > 0 && (
-          <Section title="Cast">
-            <CastStrip cast={details.cast} />
-          </Section>
-        )}
 
         <Section title="Trailers">
           <TrailerGallery trailers={details.trailers} />
