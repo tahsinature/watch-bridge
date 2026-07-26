@@ -86,10 +86,18 @@ export function ShortlistCard({
       </button>
 
       <div className="flex flex-1 flex-col p-3">
-        <p className="line-clamp-2 text-sm font-semibold leading-snug">
+        {/*
+          A two-line title would otherwise push the year and buttons down on
+          that card alone, breaking alignment across the row. mt-auto pins
+          everything below the title to the card's bottom edge instead.
+        */}
+        <p
+          className="line-clamp-2 text-sm font-semibold leading-snug"
+          title={item.title}
+        >
           {item.title}
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-auto pt-1 text-xs text-muted-foreground">
           {item.year}
           {" · "}
           {item.mediaType === "tv" ? "Series" : "Film"}

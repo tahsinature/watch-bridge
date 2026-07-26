@@ -51,7 +51,7 @@ function RecentTitleCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="group relative w-20 shrink-0">
+    <div className="group relative flex w-20 shrink-0 flex-col">
       <button
         onClick={onPick}
         className="relative block aspect-[2/3] w-full overflow-hidden border border-border bg-secondary transition-colors hover:border-primary/50"
@@ -68,11 +68,16 @@ function RecentTitleCard({
         <X className="size-3" />
       </button>
 
-      <p className="mt-1.5 line-clamp-2 text-left text-[11px] font-medium leading-tight">
+      <p
+        className="mt-1.5 line-clamp-2 text-left text-[11px] font-medium leading-tight"
+        title={title.title}
+      >
         {title.title}
       </p>
       {title.year && (
-        <p className="text-left text-[10px] text-muted-foreground">{title.year}</p>
+        <p className="mt-auto pt-0.5 text-left text-[10px] text-muted-foreground">
+          {title.year}
+        </p>
       )}
     </div>
   );

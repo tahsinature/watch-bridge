@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="WatchBridge">
+  <rect x="1.5" y="1.5" width="93" height="93" fill="#0f1117" stroke="#ff4d4d" stroke-opacity="0.5" stroke-width="3"/>
+  <g transform="translate(24 24) scale(2)" fill="none" stroke="#ff4d4d" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+    <path d="m6.2 5.3 3.1 3.9"/>
+    <path d="m12.4 3.4 3.1 4"/>
+    <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+  </g>
+</svg>

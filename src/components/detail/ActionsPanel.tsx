@@ -5,8 +5,8 @@ import type { TitleDetails } from "@/types";
 
 /**
  * External actions for a title. Shortlist and Watched deliberately live in the
- * hero (and the sticky bar on phones) rather than here — they're the primary
- * actions and shouldn't sit below two sections of metadata.
+ * pinned DetailActionBar rather than here — they're the primary actions and
+ * shouldn't sit below two sections of metadata.
  */
 export function ActionsPanel({ details }: { details: TitleDetails }) {
   return (

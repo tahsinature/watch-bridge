@@ -11,11 +11,34 @@ const dialogContentVariants = cva(
       variant: {
         centered: "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
         /**
-         * Bottom sheet on phones — reachable, and it slides up rather than
-         * zooming from the middle. Centered dialog from sm up.
+         * Fills the viewport. Slides up from the bottom on phones, where that
+         * reads as a native sheet; plain fade from sm up. Callers are expected
+         * to centre their own content — full-bleed body text at 2000px wide is
+         * unreadable.
          */
-        sheet:
-          "inset-x-0 bottom-0 max-h-[92vh] data-[state=closed]:slide-out-to-bottom-8 data-[state=open]:slide-in-from-bottom-8 sm:inset-x-auto sm:bottom-auto sm:left-[50%] sm:top-[50%] sm:max-h-[90vh] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
+        fullscreen:
+          "inset-0 max-w-none border-0 data-[state=closed]:slide-out-to-bottom-8 data-[state=open]:slide-in-from-bottom-8 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
+      },
+    },
+    defaultVariants: { variant: "centered" },
+  },
+);
+
+const dialogCloseVariants = cva(
+  "absolute right-4 top-4 grid place-items-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+  {
+    variants: {
+      variant: {
+        /* On a solid popover surface a discreet glyph is enough. */
+        centered:
+          "size-8 rounded-md text-muted-foreground hover:text-foreground [&_svg]:size-4",
+        /*
+         * Sits over a backdrop image, so it needs its own surface to stay
+         * legible on light artwork — and a real hit target, since it's the
+         * only exit pinned to the top of a full-screen view.
+         */
+        fullscreen:
+          "size-10 border border-white/25 bg-black/70 text-white hover:border-primary hover:bg-primary hover:text-primary-foreground [&_svg]:size-5",
       },
     },
     defaultVariants: { variant: "centered" },
@@ -55,8 +78,8 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <X className="h-4 w-4" />
+      <DialogPrimitive.Close className={cn(dialogCloseVariants({ variant }))}>
+        <X />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>

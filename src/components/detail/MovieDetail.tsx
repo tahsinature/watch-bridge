@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
 import { ActionsPanel } from "./ActionsPanel";
-import { LibraryActions } from "./LibraryActions";
-import { MobileActionBar } from "./MobileActionBar";
+import { DetailActionBar } from "./DetailActionBar";
 import { CastStrip } from "./CastStrip";
 import { TrailerGallery } from "./TrailerGallery";
 import { WhereToWatch } from "./WhereToWatch";
@@ -34,8 +33,8 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
   return (
     <Dialog open={!!selected} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        variant="sheet"
-        className="max-w-3xl grid-rows-[1fr_auto] gap-0 overflow-hidden p-0"
+        variant="fullscreen"
+        className="grid-rows-[1fr_auto] gap-0 overflow-hidden p-0"
       >
         <DialogTitle className="sr-only">
           {data?.title ?? selected?.title ?? "Title details"}
@@ -51,7 +50,7 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
           {data && <DetailBody details={data} />}
         </div>
 
-        {data && <MobileActionBar details={data} onClose={onClose} />}
+        {data && <DetailActionBar details={data} onClose={onClose} />}
       </DialogContent>
     </Dialog>
   );
@@ -66,9 +65,9 @@ function DetailBody({ details }: { details: TitleDetails }) {
 
   return (
     <div className="pb-6">
-      {/* Hero */}
+      {/* Hero — backdrop runs full bleed, everything else stays in a column. */}
       <div className="relative">
-        <div className="h-40 w-full overflow-hidden sm:h-52">
+        <div className="h-40 w-full overflow-hidden sm:h-52 lg:h-64">
           {backdrop ? (
             <img src={backdrop} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -78,7 +77,7 @@ function DetailBody({ details }: { details: TitleDetails }) {
           <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/50 to-transparent" />
         </div>
 
-        <div className="relative -mt-16 flex items-end gap-4 px-6">
+        <div className="relative mx-auto -mt-16 flex max-w-3xl items-end gap-4 px-6">
           <div className="h-40 w-28 shrink-0 overflow-hidden rounded-xl bg-secondary shadow-2xl ring-1 ring-border sm:h-48 sm:w-32">
             {heroPoster ? (
               <img
@@ -117,20 +116,12 @@ function DetailBody({ details }: { details: TitleDetails }) {
                 “{details.tagline}”
               </p>
             )}
-
-            {/*
-              The app's primary action belongs above the fold, not below Cast
-              and Details. Phones get these in the sheet's sticky bar instead.
-            */}
-            <div className="mt-3 hidden sm:block">
-              <LibraryActions details={details} />
-            </div>
           </div>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex flex-col gap-7 px-6 pt-5">
+      <div className="mx-auto flex max-w-3xl flex-col gap-7 px-6 pt-5">
         {details.cast.length > 0 && (
           <Section title="Cast">
             <CastStrip cast={details.cast} />

@@ -83,11 +83,17 @@ export function MovieCard({ result, onSelect }: MovieCardProps) {
         onClick={() => onSelect(result)}
         className="flex flex-1 flex-col p-3 text-left"
       >
-        <p className="line-clamp-2 text-sm font-semibold leading-snug">
+        {/* mt-auto keeps years aligned when a title wraps to two lines. */}
+        <p
+          className="line-clamp-2 text-sm font-semibold leading-snug"
+          title={result.title}
+        >
           {result.title}
         </p>
         {result.year && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{result.year}</p>
+          <p className="mt-auto pt-1 text-xs text-muted-foreground">
+            {result.year}
+          </p>
         )}
       </button>
     </motion.div>
