@@ -7,10 +7,15 @@ import type { LibraryItem } from "@/types";
 interface ShortlistButtonProps {
   item: LibraryItem;
   showLabel?: boolean;
+  className?: string;
 }
 
 /** Toggle a title in/out of the library (adds to shortlist when absent). */
-export function ShortlistButton({ item, showLabel }: ShortlistButtonProps) {
+export function ShortlistButton({
+  item,
+  showLabel,
+  className,
+}: ShortlistButtonProps) {
   const inLibrary = useInLibrary(item.id, item.mediaType);
   const addToShortlist = useLibrary((s) => s.addToShortlist);
   const remove = useLibrary((s) => s.remove);
@@ -31,6 +36,7 @@ export function ShortlistButton({ item, showLabel }: ShortlistButtonProps) {
       size={showLabel ? "sm" : "icon-sm"}
       onClick={toggle}
       aria-label={inLibrary ? "Remove from library" : "Add to shortlist"}
+      className={className}
     >
       {inLibrary ? (
         <BookmarkCheck className="h-4 w-4" />

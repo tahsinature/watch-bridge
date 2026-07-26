@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ContentLevel } from "@/types";
+import type { ContentLevel, SortOrder } from "@/types";
 
 /**
  * User preferences persisted to localStorage. Kept intentionally small — the
@@ -15,7 +15,10 @@ export interface SettingsState {
   notionUrl: string;
   /** Highest acceptable content level; null disables the filter. */
   maxContentLevel: ContentLevel | null;
+  /** How search results are ordered. */
+  sortOrder: SortOrder;
   setTmdbApiKey: (key: string) => void;
+  setSortOrder: (order: SortOrder) => void;
   setRegions: (regions: string[]) => void;
   /** Add the country if absent, remove it if present. */
   toggleRegion: (code: string) => void;
@@ -30,7 +33,9 @@ export const useSettings = create<SettingsState>()(
       regions: ["US"],
       notionUrl: "",
       maxContentLevel: null,
+      sortOrder: "votes",
       setTmdbApiKey: (tmdbApiKey) => set({ tmdbApiKey: tmdbApiKey.trim() }),
+      setSortOrder: (sortOrder) => set({ sortOrder }),
       setMaxContentLevel: (maxContentLevel) => set({ maxContentLevel }),
       setRegions: (regions) => set({ regions }),
       toggleRegion: (code) =>

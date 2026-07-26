@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { itemKey } from "@/lib/library";
-import type { LibraryItem, MediaType } from "@/types";
+import type { LibraryItem, MediaType, TitleDetails } from "@/types";
 
 interface LibraryState {
   items: LibraryItem[];
@@ -71,9 +72,48 @@ export const useLibrary = create<LibraryState>()(
           ),
         })),
     }),
-    { name: "watchbridge.library" },
+    {
+      name: "watchbridge.library",
+      version: 1,
+
+      /** v1 added voteCount; entries saved before it have none. */
+      migrate: (persisted) => {
+        const state = persisted as LibraryState;
+        const items = Array.isArray(state?.items) ? state.items : [];
+        return {
+          ...state,
+          items: items.map((i) => ({ ...i, voteCount: i.voteCount ?? 0 })),
+        };
+      },
+    },
   ),
 );
+
+/**
+ * Refresh a saved title's TMDB rating whenever its details load. Ratings drift
+ * over time, and entries saved before voteCount existed carry a placeholder 0
+ * until something fills it in.
+ */
+export function useSyncLibraryRating(details: TitleDetails): void {
+  const update = useLibrary((s) => s.update);
+  const stored = useLibrary((s) =>
+    s.items.find(
+      (i) => itemKey(i.id, i.mediaType) === itemKey(details.id, details.mediaType),
+    ),
+  );
+  const isStale =
+    stored !== undefined &&
+    (stored.voteCount !== details.voteCount ||
+      stored.voteAverage !== details.voteAverage);
+
+  useEffect(() => {
+    if (!isStale) return;
+    update(details.id, details.mediaType, {
+      voteAverage: details.voteAverage,
+      voteCount: details.voteCount,
+    });
+  }, [isStale, details, update]);
+}
 
 /** Reactive helper: is this title already in the library? */
 export function useInLibrary(id: number, mediaType: MediaType): boolean {

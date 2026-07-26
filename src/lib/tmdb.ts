@@ -120,6 +120,7 @@ export async function searchMulti(
       mediaType: r.media_type as MediaType,
       title: r.title ?? r.name ?? "Untitled",
       year: yearOf(r.release_date ?? r.first_air_date),
+      releaseDate: r.release_date ?? r.first_air_date ?? "",
       overview: r.overview ?? "",
       posterPath: r.poster_path ?? null,
       backdropPath: r.backdrop_path ?? null,

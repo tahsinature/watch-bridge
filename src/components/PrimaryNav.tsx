@@ -1,7 +1,6 @@
 import { Bookmark, Eye, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-export type View = "search" | "shortlist" | "watched";
+import type { View } from "@/types";
 
 interface PrimaryNavProps {
   view: View;

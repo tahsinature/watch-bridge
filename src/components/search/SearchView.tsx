@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { MovieGrid } from "./MovieGrid";
 import { RecentSearches } from "./RecentSearches";
 import { RecentTitles } from "./RecentTitles";
+import { SortSelect } from "./SortSelect";
 import { ContentLevelFilter } from "@/components/library/ContentLevelFilter";
 import { useSearch } from "@/hooks/useTmdb";
 import { useDebounce } from "@/hooks/useDebounce";
+import { sortResults } from "@/lib/sort";
 import { useRecentSearches } from "@/stores/recent";
 import { useRecentTitles } from "@/stores/recentTitles";
+import { useSettings } from "@/stores/settings";
 import type { SearchResult, SelectionRef } from "@/types";
 
 const EXAMPLES = ["Dune", "Breaking Bad", "Oppenheimer", "The Bear", "Interstellar"];
@@ -19,6 +22,12 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
 
   const { data, isLoading, isFetching, error } = useSearch(query);
   const hasQuery = query.trim().length > 1;
+
+  const sortOrder = useSettings((s) => s.sortOrder);
+  const results = useMemo(
+    () => sortResults(data ?? [], sortOrder),
+    [data, sortOrder],
+  );
 
   // Only remember searches that actually found something.
   const record = useRecentSearches((s) => s.record);
@@ -52,15 +61,16 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
         />
       </div>
 
-      {hasQuery && (data?.length ?? 0) > 0 && (
-        <div className="flex justify-end">
+      {hasQuery && results.length > 0 && (
+        <div className="flex flex-wrap justify-end gap-3">
+          <SortSelect />
           <ContentLevelFilter />
         </div>
       )}
 
       {hasQuery ? (
         <MovieGrid
-          results={data ?? []}
+          results={results}
           loading={isLoading}
           error={(error as Error) ?? null}
           query={query}

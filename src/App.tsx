@@ -2,22 +2,20 @@ import { useMemo, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/Header";
-import { type View } from "@/components/PrimaryNav";
 import { ApiKeyGate } from "@/components/ApiKeyGate";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SearchView } from "@/components/search/SearchView";
 import { ShortlistView } from "@/components/library/ShortlistView";
 import { WatchedView } from "@/components/library/WatchedView";
 import { MovieDetail } from "@/components/detail/MovieDetail";
+import { useUrlState } from "@/hooks/useUrlState";
 import { useHasApiKey } from "@/stores/settings";
 import { useLibrary } from "@/stores/library";
-import type { SelectionRef } from "@/types";
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [view, setView] = useState<View>("search");
-  const [selected, setSelected] = useState<SelectionRef | null>(null);
   const [homeKey, setHomeKey] = useState(0);
+  const { view, selection, setView, setSelection } = useUrlState();
   const hasApiKey = useHasApiKey();
 
   /**
@@ -55,15 +53,15 @@ export default function App() {
           {!hasApiKey ? (
             <ApiKeyGate onOpenSettings={() => setSettingsOpen(true)} />
           ) : view === "search" ? (
-            <SearchView key={homeKey} onSelect={setSelected} />
+            <SearchView key={homeKey} onSelect={setSelection} />
           ) : view === "shortlist" ? (
-            <ShortlistView onSelect={setSelected} />
+            <ShortlistView onSelect={setSelection} />
           ) : (
-            <WatchedView onSelect={setSelected} />
+            <WatchedView onSelect={setSelection} />
           )}
         </main>
 
-        <MovieDetail selected={selected} onClose={() => setSelected(null)} />
+        <MovieDetail selected={selection} onClose={() => setSelection(null)} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <Toaster />
       </div>

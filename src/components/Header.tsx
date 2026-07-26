@@ -5,7 +5,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PrimaryNav, type View } from "@/components/PrimaryNav";
+import { PrimaryNav } from "@/components/PrimaryNav";
+import type { View } from "@/types";
 
 interface HeaderProps {
   view: View;

@@ -4,7 +4,7 @@ import { PosterImage } from "@/components/ui/poster-image";
 import { ContentLevelBadge } from "./ContentLevelBadge";
 import { useIsOverLimit } from "./ContentLevelFilter";
 import { useContentLevel } from "@/stores/content";
-import { formatRating } from "@/lib/format";
+import { formatRating, formatVotes } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { LibraryItem } from "@/types";
 
@@ -52,9 +52,17 @@ export function ShortlistCard({
           className="transition-transform duration-300 group-hover:scale-105"
         />
         {rating && (
-          <span className="absolute right-2 top-2 inline-flex items-center gap-1 border border-gold/30 bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-gold">
+          <span
+            className="absolute right-2 top-2 inline-flex items-center gap-1 border border-gold/30 bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-gold"
+            title={`${item.voteCount.toLocaleString()} votes`}
+          >
             <Star className="h-3 w-3 fill-gold text-gold" />
             {rating}
+            {item.voteCount > 0 && (
+              <span className="font-normal text-white/70">
+                ({formatVotes(item.voteCount)})
+              </span>
+            )}
           </span>
         )}
         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/70 to-transparent" />

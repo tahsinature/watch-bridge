@@ -61,6 +61,18 @@
     color-scheme: dark;
   }
 
+  /*
+   * One focus indicator for the whole app. Without this, anything that doesn't
+   * define its own ring falls back to the browser's blue outline, which reads
+   * as a foreign element against the coral palette. Components that already
+   * style focus (Button, Input, Select) set `focus-visible:outline-none` and
+   * win from the utilities layer, so they're unaffected.
+   */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-variant-ligatures: none;

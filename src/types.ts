@@ -17,11 +17,15 @@ export const CONTENT_LEVELS: {
   { value: 3, label: "3 – Open", hint: "Nudity or topless" },
 ];
 
+/** The three top-level tabs. Mirrored in the URL as `?view=`. */
+export type View = "search" | "shortlist" | "watched";
+
 /** Minimal reference needed to open a title's detail view. */
 export interface SelectionRef {
   id: number;
   mediaType: MediaType;
-  title: string;
+  /** Absent when restored from a URL, which carries only type + id. */
+  title?: string;
 }
 
 // ---- Library (shortlist + watched log) ------------------------------------
@@ -36,6 +40,7 @@ export interface LibraryItem {
   posterPath: string | null;
   backdropPath: string | null;
   voteAverage: number;
+  voteCount: number;
   overview: string;
   imdbId: string | null;
   genres: string[];
@@ -81,12 +86,17 @@ export interface SearchResult {
   mediaType: MediaType;
   title: string;
   year: string;
+  /** Full YYYY-MM-DD, so date sorting doesn't tie every title in a year. */
+  releaseDate: string;
   overview: string;
   posterPath: string | null;
   backdropPath: string | null;
   voteAverage: number;
   voteCount: number;
 }
+
+/** How search results are ordered. TMDB has no sort param for text search. */
+export type SortOrder = "relevance" | "votes" | "rating" | "newest" | "oldest";
 
 export interface Trailer {
   id: string;

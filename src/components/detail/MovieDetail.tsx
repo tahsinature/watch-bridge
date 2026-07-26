@@ -9,10 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
 import { ActionsPanel } from "./ActionsPanel";
+import { MobileActionBar } from "./MobileActionBar";
 import { CastStrip } from "./CastStrip";
 import { TrailerGallery } from "./TrailerGallery";
 import { WhereToWatch } from "./WhereToWatch";
 import { useDetails } from "@/hooks/useTmdb";
+import { useSyncLibraryRating } from "@/stores/library";
 import { backdropUrl, posterUrl } from "@/lib/tmdb";
 import type { SelectionRef, TitleDetails } from "@/types";
 
@@ -30,7 +32,10 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
 
   return (
     <Dialog open={!!selected} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl gap-0 overflow-hidden p-0">
+      <DialogContent
+        variant="sheet"
+        className="max-w-3xl grid-rows-[1fr_auto] gap-0 overflow-hidden p-0"
+      >
         <DialogTitle className="sr-only">
           {data?.title ?? selected?.title ?? "Title details"}
         </DialogTitle>
@@ -38,11 +43,14 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
           Details, trailers and actions for {selected?.title ?? "the selected title"}.
         </DialogDescription>
 
-        <div className="max-h-[90vh] overflow-y-auto scrollbar-thin">
+        {/* min-h-0 lets this row shrink inside the grid so it can scroll. */}
+        <div className="min-h-0 overflow-y-auto scrollbar-thin">
           {isLoading && <DetailSkeleton />}
           {error && <DetailError message={(error as Error).message} />}
           {data && <DetailBody details={data} />}
         </div>
+
+        {data && <MobileActionBar details={data} onClose={onClose} />}
       </DialogContent>
     </Dialog>
   );
@@ -51,6 +59,9 @@ export function MovieDetail({ selected, onClose }: MovieDetailProps) {
 function DetailBody({ details }: { details: TitleDetails }) {
   const backdrop = backdropUrl(details.backdropPath, "w1280");
   const heroPoster = posterUrl(details.posterPath, "w342");
+
+  // Opening a saved title is the natural moment to refresh its stored rating.
+  useSyncLibraryRating(details);
 
   return (
     <div className="pb-6">
