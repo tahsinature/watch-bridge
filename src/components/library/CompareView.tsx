@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { PosterImage } from "@/components/ui/poster-image";
 import { StarRating } from "@/components/ui/star-rating";
 import { useDetails } from "@/hooks/useTmdb";
-import { formatRating, formatRuntime } from "@/lib/format";
+import { formatRating, formatRuntime, formatVotes } from "@/lib/format";
 import type { LibraryItem } from "@/types";
 
 interface CompareViewProps {
@@ -66,7 +66,10 @@ function CompareColumn({
   const genres = data?.genres.length ? data.genres : item.genres;
   const runtime = formatRuntime(data?.runtime ?? item.runtime);
   const overview = data?.overview || item.overview;
-  const rating = formatRating(item.voteAverage);
+  // Vote count only exists on the fetched details, so read the average from
+  // there too — a stored average beside a fresh count could disagree.
+  const rating = formatRating(data?.voteAverage ?? item.voteAverage);
+  const voteCount = data?.voteCount ?? 0;
 
   return (
     <div className="relative flex w-56 shrink-0 flex-col rounded-xl border border-border bg-secondary/20">
@@ -100,6 +103,14 @@ function CompareColumn({
             <span className="inline-flex items-center gap-1 font-semibold text-gold">
               <Star className="h-3.5 w-3.5 fill-gold" />
               {rating}
+            </span>
+          )}
+          {voteCount > 0 && (
+            <span
+              className="text-muted-foreground"
+              title={`${voteCount.toLocaleString()} votes`}
+            >
+              ({formatVotes(voteCount)})
             </span>
           )}
           {runtime && (

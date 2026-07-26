@@ -5,7 +5,7 @@ import { ShortlistButton } from "@/components/library/ShortlistButton";
 import { ContentLevelBadge } from "@/components/library/ContentLevelBadge";
 import { useIsOverLimit } from "@/components/library/ContentLevelFilter";
 import { useContentLevel } from "@/stores/content";
-import { formatRating } from "@/lib/format";
+import { formatRating, formatVotes } from "@/lib/format";
 import { fromSearchResult } from "@/lib/library";
 import { cn } from "@/lib/utils";
 import type { SearchResult } from "@/types";
@@ -54,9 +54,18 @@ export function MovieCard({ result, onSelect }: MovieCardProps) {
 
         <span className="absolute inset-x-2 bottom-2 flex items-end justify-between gap-1">
           {rating ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gold">
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-gold"
+              title={`${result.voteCount.toLocaleString()} votes`}
+            >
               <Star className="size-3 fill-gold text-gold" />
               {rating}
+              {result.voteCount > 0 && (
+                /* White, not muted — this sits on the poster, not a surface. */
+                <span className="font-normal text-white/70">
+                  ({formatVotes(result.voteCount)})
+                </span>
+              )}
             </span>
           ) : (
             <span />

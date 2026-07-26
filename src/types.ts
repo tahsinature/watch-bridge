@@ -85,6 +85,7 @@ export interface SearchResult {
   posterPath: string | null;
   backdropPath: string | null;
   voteAverage: number;
+  voteCount: number;
 }
 
 export interface Trailer {

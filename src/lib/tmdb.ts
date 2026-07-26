@@ -98,6 +98,7 @@ interface RawSearchItem {
   poster_path?: string | null;
   backdrop_path?: string | null;
   vote_average?: number;
+  vote_count?: number;
 }
 
 export async function searchMulti(
@@ -123,6 +124,7 @@ export async function searchMulti(
       posterPath: r.poster_path ?? null,
       backdropPath: r.backdrop_path ?? null,
       voteAverage: r.vote_average ?? 0,
+      voteCount: r.vote_count ?? 0,
     }));
 }
 
