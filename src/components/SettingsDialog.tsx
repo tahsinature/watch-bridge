@@ -59,6 +59,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             <ActionsSettings />
           </TabsContent>
         </Tabs>
+
+        <p
+          className="text-center font-mono text-[11px] text-muted-foreground/70"
+          aria-label={`WatchBridge version ${__APP_VERSION__}`}
+        >
+          WatchBridge v{__APP_VERSION__}
+        </p>
       </DialogContent>
     </Dialog>
   );

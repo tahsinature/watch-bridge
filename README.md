@@ -71,6 +71,15 @@ bun run preview    # serve the build
 Pushing to `master` deploys to GitHub Pages via the included workflow. Set
 **Settings → Pages → Source** to **GitHub Actions** first.
 
+Before merging a release, bump the patch version and commit the updated
+`package.json`:
+
+```bash
+bun run version:patch
+```
+
+The current version is shown at the bottom of the app's Settings dialog.
+
 ## Built with
 
 [Bun](https://bun.sh) · [Vite](https://vite.dev) · React · TypeScript ·
