@@ -1,6 +1,6 @@
 import type { ContentLevel } from "@/types";
 
-/** Colour per level, mirroring the user's Notion palette. */
+/** Colour assigned to each content level throughout the app. */
 export const LEVEL_STYLES: Record<
   ContentLevel,
   { chip: string; selected: string; dot: string; short: string }

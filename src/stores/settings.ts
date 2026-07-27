@@ -11,8 +11,6 @@ export interface SettingsState {
   tmdbApiKey: string;
   /** ISO 3166-1 country codes selected for "Where to watch" comparison. */
   regions: string[];
-  /** Optional Notion page/database URL opened by the "Log to Notion" action. */
-  notionUrl: string;
   /** Highest acceptable content level; null disables the filter. */
   maxContentLevel: ContentLevel | null;
   /** How search results are ordered. */
@@ -22,7 +20,6 @@ export interface SettingsState {
   setRegions: (regions: string[]) => void;
   /** Add the country if absent, remove it if present. */
   toggleRegion: (code: string) => void;
-  setNotionUrl: (url: string) => void;
   setMaxContentLevel: (level: ContentLevel | null) => void;
 }
 
@@ -31,7 +28,6 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       tmdbApiKey: "",
       regions: ["US"],
-      notionUrl: "",
       maxContentLevel: null,
       sortOrder: "votes",
       setTmdbApiKey: (tmdbApiKey) => set({ tmdbApiKey: tmdbApiKey.trim() }),
@@ -44,9 +40,19 @@ export const useSettings = create<SettingsState>()(
             ? s.regions.filter((r) => r !== code)
             : [...s.regions, code],
         })),
-      setNotionUrl: (notionUrl) => set({ notionUrl: notionUrl.trim() }),
     }),
-    { name: "watchbridge.settings" },
+    {
+      name: "watchbridge.settings",
+      version: 1,
+      migrate: (persisted) => {
+        if (typeof persisted !== "object" || persisted === null) {
+          return persisted as SettingsState;
+        }
+        const settings = { ...(persisted as Record<string, unknown>) };
+        delete settings.notionUrl;
+        return settings as unknown as SettingsState;
+      },
+    },
   ),
 );
 

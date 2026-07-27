@@ -19,6 +19,7 @@ export default function App() {
   const { view, selection, person, setView, setSelection, setPerson } =
     useUrlState();
   const hasApiKey = useHasApiKey();
+  const canShowDetails = hasApiKey && !settingsOpen;
 
   /**
    * Clicking the brand returns to a clean Search view. SearchView owns its
@@ -64,12 +65,12 @@ export default function App() {
         </main>
 
         <MovieDetail
-          selected={selection}
+          selected={canShowDetails ? selection : null}
           onClose={() => setSelection(null)}
           onSelectPerson={setPerson}
         />
         <PersonDetail
-          personId={person}
+          personId={canShowDetails ? person : null}
           onClose={() => setPerson(null)}
           onSelectTitle={setSelection}
         />

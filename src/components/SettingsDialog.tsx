@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  NotebookPen,
   Upload,
 } from "lucide-react";
 import {
@@ -53,7 +52,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           <TabsContent value="general" className="mt-5 space-y-6">
             <ApiKeySection />
-            <NotionSection />
             <BackupSection />
           </TabsContent>
 
@@ -123,32 +121,6 @@ function ApiKeySection() {
           </a>
         </Button>
       </div>
-    </div>
-  );
-}
-
-function NotionSection() {
-  const notionUrl = useSettings((s) => s.notionUrl);
-  const setNotionUrl = useSettings((s) => s.setNotionUrl);
-
-  return (
-    <div className="space-y-3 border-t border-border pt-5">
-      <div className="flex items-center gap-2">
-        <NotebookPen className="h-4 w-4 text-primary" />
-        <Label htmlFor="notion-url">Notion page URL (optional)</Label>
-      </div>
-      <Input
-        id="notion-url"
-        value={notionUrl}
-        spellCheck={false}
-        autoComplete="off"
-        placeholder="https://www.notion.so/your-watch-log"
-        onChange={(e) => setNotionUrl(e.target.value)}
-      />
-      <p className="text-xs text-muted-foreground">
-        Where “Log to Notion” opens after copying a formatted note. Leave blank to
-        open a fresh Notion tab.
-      </p>
     </div>
   );
 }

@@ -1,15 +1,13 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Eye, NotebookPen, Pencil, Trash2, Undo2 } from "lucide-react";
+import { Eye, Pencil, Trash2, Undo2 } from "lucide-react";
 import { WatchedDialog } from "./WatchedDialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconAction } from "@/components/ui/icon-action";
 import { PosterImage } from "@/components/ui/poster-image";
 import { StarRating } from "@/components/ui/star-rating";
 import { useLibrary } from "@/stores/library";
-import { useSettings } from "@/stores/settings";
 import { toast } from "@/stores/toast";
-import { logToNotion } from "@/lib/notion";
 import { formatDate, itemKey, toSelectionRef } from "@/lib/library";
 import type { LibraryItem, SelectionRef } from "@/types";
 
@@ -18,7 +16,6 @@ export function WatchedView({ onSelect }: { onSelect: (ref: SelectionRef) => voi
   const update = useLibrary((s) => s.update);
   const remove = useLibrary((s) => s.remove);
   const returnToShortlist = useLibrary((s) => s.returnToShortlist);
-  const notionUrl = useSettings((s) => s.notionUrl);
 
   const watched = useMemo(
     () =>
@@ -35,7 +32,7 @@ export function WatchedView({ onSelect }: { onSelect: (ref: SelectionRef) => voi
       <EmptyState
         icon={Eye}
         title="Nothing logged yet"
-        detail="Mark titles as watched to rate them, jot notes, and log them to Notion."
+        detail="Mark titles as watched to rate them and jot down your notes."
       />
     );
   }
@@ -57,7 +54,6 @@ export function WatchedView({ onSelect }: { onSelect: (ref: SelectionRef) => voi
               item={item}
               onOpen={() => onSelect(toSelectionRef(item))}
               onEdit={() => setEditTarget(item)}
-              onNotion={() => void logToNotion(item, notionUrl)}
               onReturn={() => {
                 returnToShortlist(item.id, item.mediaType);
                 toast("Back on the shortlist");
@@ -90,12 +86,11 @@ interface WatchedRowProps {
   item: LibraryItem;
   onOpen: () => void;
   onEdit: () => void;
-  onNotion: () => void;
   onReturn: () => void;
   onRemove: () => void;
 }
 
-function WatchedRow({ item, onOpen, onEdit, onNotion, onReturn, onRemove }: WatchedRowProps) {
+function WatchedRow({ item, onOpen, onEdit, onReturn, onRemove }: WatchedRowProps) {
   return (
     <motion.div
       layout
@@ -133,9 +128,6 @@ function WatchedRow({ item, onOpen, onEdit, onNotion, onReturn, onRemove }: Watc
         <div className="mt-auto flex items-center gap-1 pt-2">
           <IconAction label="Edit" onClick={onEdit}>
             <Pencil className="h-4 w-4" />
-          </IconAction>
-          <IconAction label="Log to Notion" onClick={onNotion}>
-            <NotebookPen className="h-4 w-4" />
           </IconAction>
           <IconAction label="Move back to shortlist" onClick={onReturn}>
             <Undo2 className="h-4 w-4" />

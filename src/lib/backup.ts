@@ -28,7 +28,7 @@ export interface BackupFile {
 }
 
 export function buildBackup(includeApiKey: boolean): BackupFile {
-  const { tmdbApiKey, regions, notionUrl, maxContentLevel, sortOrder } =
+  const { tmdbApiKey, regions, maxContentLevel, sortOrder } =
     useSettings.getState();
 
   return {
@@ -40,7 +40,6 @@ export function buildBackup(includeApiKey: boolean): BackupFile {
         // Opt-in: without this the file is plain data and safe to store anywhere.
         ...(includeApiKey ? { tmdbApiKey } : {}),
         regions,
-        notionUrl,
         maxContentLevel,
         sortOrder,
       },
@@ -163,7 +162,6 @@ export function restoreBackup(raw: unknown): RestoreSummary {
     const s = data.settings;
     const patch: Partial<SettingsState> = {};
     if (typeof s.tmdbApiKey === "string") patch.tmdbApiKey = s.tmdbApiKey;
-    if (typeof s.notionUrl === "string") patch.notionUrl = s.notionUrl;
     if (Array.isArray(s.regions) && s.regions.every((r) => typeof r === "string")) {
       patch.regions = s.regions as string[];
     }
