@@ -2,15 +2,10 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Eye, NotebookPen, Pencil, Trash2, Undo2 } from "lucide-react";
 import { WatchedDialog } from "./WatchedDialog";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IconAction } from "@/components/ui/icon-action";
 import { PosterImage } from "@/components/ui/poster-image";
 import { StarRating } from "@/components/ui/star-rating";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useLibrary } from "@/stores/library";
 import { useSettings } from "@/stores/settings";
 import { toast } from "@/stores/toast";
@@ -136,49 +131,20 @@ function WatchedRow({ item, onOpen, onEdit, onNotion, onReturn, onRemove }: Watc
         )}
 
         <div className="mt-auto flex items-center gap-1 pt-2">
-          <RowAction label="Edit" onClick={onEdit}>
+          <IconAction label="Edit" onClick={onEdit}>
             <Pencil className="h-4 w-4" />
-          </RowAction>
-          <RowAction label="Log to Notion" onClick={onNotion}>
+          </IconAction>
+          <IconAction label="Log to Notion" onClick={onNotion}>
             <NotebookPen className="h-4 w-4" />
-          </RowAction>
-          <RowAction label="Move back to shortlist" onClick={onReturn}>
+          </IconAction>
+          <IconAction label="Move back to shortlist" onClick={onReturn}>
             <Undo2 className="h-4 w-4" />
-          </RowAction>
-          <RowAction label="Remove" onClick={onRemove} destructive>
+          </IconAction>
+          <IconAction label="Remove" onClick={onRemove} destructive>
             <Trash2 className="h-4 w-4" />
-          </RowAction>
+          </IconAction>
         </div>
       </div>
     </motion.div>
-  );
-}
-
-function RowAction({
-  label,
-  onClick,
-  destructive,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  destructive?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onClick}
-          aria-label={label}
-          className={destructive ? "text-muted-foreground hover:text-destructive" : ""}
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
   );
 }

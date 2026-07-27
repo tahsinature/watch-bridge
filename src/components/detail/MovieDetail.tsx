@@ -1,4 +1,4 @@
-import { AlertCircle, Clapperboard, Tv } from "lucide-react";
+import { AlertCircle, Check, Clapperboard, Copy, Tv } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -7,15 +7,20 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IconAction } from "@/components/ui/icon-action";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
-import { ActionsPanel } from "./ActionsPanel";
+import { ActionBar } from "@/components/actions/ActionBar";
+import { LabeledBlock } from "./LabeledRow";
+import { PosterActions } from "./PosterActions";
 import { DetailActionBar } from "./DetailActionBar";
 import { CastStrip } from "./CastStrip";
 import { TrailerGallery } from "./TrailerGallery";
 import { WhereToWatch } from "./WhereToWatch";
 import { useDetails } from "@/hooks/useTmdb";
+import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { useSyncLibraryRating } from "@/stores/library";
+import { toast } from "@/stores/toast";
 import { backdropUrl, posterUrl } from "@/lib/tmdb";
 import type { SelectionRef, TitleDetails } from "@/types";
 
@@ -79,8 +84,17 @@ function DetailBody({
   const backdrop = backdropUrl(details.backdropPath, "w1280");
   const heroPoster = posterUrl(details.posterPath, "w342");
 
+  const [titleCopied, flagTitleCopied] = useCopiedFlag();
+
   // Opening a saved title is the natural moment to refresh its stored rating.
   useSyncLibraryRating(details);
+
+  const copyTitle = async () => {
+    const year = details.year ? ` (${details.year})` : "";
+    await navigator.clipboard.writeText(`${details.title}${year}`);
+    flagTitleCopied();
+    toast("Title copied", "success");
+  };
 
   return (
     <div className="pb-6">
@@ -97,18 +111,25 @@ function DetailBody({
         </div>
 
         <div className="relative mx-auto -mt-16 flex max-w-3xl items-end gap-4 px-6">
-          <div className="h-40 w-28 shrink-0 overflow-hidden rounded-xl bg-secondary shadow-2xl ring-1 ring-border sm:h-48 sm:w-32">
-            {heroPoster ? (
-              <img
-                src={heroPoster}
-                alt={details.title}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="grid h-full w-full place-items-center">
-                <Clapperboard className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
+          <div className="flex shrink-0 flex-col gap-1.5">
+            <div className="h-40 w-28 overflow-hidden bg-secondary shadow-2xl ring-1 ring-border sm:h-48 sm:w-32">
+              {heroPoster ? (
+                <img
+                  src={heroPoster}
+                  alt={details.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center">
+                  <Clapperboard className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            <PosterActions
+              posterPath={details.posterPath}
+              title={details.title}
+              year={details.year}
+            />
           </div>
 
           <div className="min-w-0 pb-1">
@@ -122,9 +143,18 @@ function DetailBody({
                 {details.mediaType === "tv" ? "Series" : "Film"}
               </Badge>
             </div>
-            <h2 className="text-balance text-xl font-bold leading-tight sm:text-2xl">
-              {details.title}
-            </h2>
+            <div className="flex items-start gap-1">
+              <h2 className="min-w-0 text-balance text-xl font-bold leading-tight sm:text-2xl">
+                {details.title}
+              </h2>
+              <IconAction label="Copy title and year" onClick={copyTitle}>
+                {titleCopied ? (
+                  <Check className="size-4" />
+                ) : (
+                  <Copy className="size-4" />
+                )}
+              </IconAction>
+            </div>
             {details.originalTitle && details.originalTitle !== details.title && (
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {details.originalTitle}
@@ -152,7 +182,9 @@ function DetailBody({
         </Section>
 
         <Section title="Actions">
-          <ActionsPanel details={details} />
+          <LabeledBlock>
+            <ActionBar details={details} />
+          </LabeledBlock>
         </Section>
 
         <WhereToWatch details={details} />

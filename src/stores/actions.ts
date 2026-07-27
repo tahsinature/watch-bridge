@@ -78,15 +78,6 @@ export const DEFAULT_ACTIONS: ActionDef[] = [
     template: "https://www.google.com/search?q={titleEncoded}+{year}",
     enabled: true,
   },
-  {
-    id: "copy-title",
-    name: "Copy title",
-    icon: "Copy",
-    type: "copy",
-    group: "record",
-    template: "{title} ({year})",
-    enabled: true,
-  },
   // Disabled examples — templates to copy from when wiring up your own setup.
   {
     id: "nas-example",

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Check, Copy, Download } from "lucide-react";
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { downloadJson } from "@/lib/download";
 import { toast } from "@/stores/toast";
 
@@ -38,13 +38,12 @@ export function JsonExportDialog({
   data,
   children,
 }: JsonExportDialogProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, flagCopied] = useCopiedFlag();
   const json = JSON.stringify(data, null, 2);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(json);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+    flagCopied();
     toast("JSON copied", "success");
   };
 

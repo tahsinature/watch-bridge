@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { toast } from "@/stores/toast";
 
 interface CopyTextButtonProps {
@@ -10,12 +10,11 @@ interface CopyTextButtonProps {
 
 /** Small inline "copy this text" control for section headers. */
 export function CopyTextButton({ value, label, toastMessage }: CopyTextButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, flagCopied] = useCopiedFlag();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(value);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+    flagCopied();
     toast(toastMessage, "success");
   };
 

@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Check, Copy, Download, Link } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { IconAction } from "@/components/ui/icon-action";
+import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { copyImage, downloadImage } from "@/lib/poster";
 import { posterFilename } from "@/lib/format";
 import { posterUrl } from "@/lib/tmdb";
@@ -13,9 +13,13 @@ interface PosterActionsProps {
   year: string;
 }
 
+/**
+ * Sits directly beneath the poster in the hero. Icon-only so the row stays
+ * within the poster's width — the labels live in tooltips.
+ */
 export function PosterActions({ posterPath, title, year }: PosterActionsProps) {
-  const [copied, setCopied] = useState(false);
-  const [downloaded, setDownloaded] = useState(false);
+  const [copied, flagCopied] = useCopiedFlag();
+  const [downloaded, flagDownloaded] = useCopiedFlag();
 
   const fullUrl = posterUrl(posterPath, "original");
   // Clipboard writes must be PNG, so copy a mid-size render — encoding the
@@ -26,8 +30,7 @@ export function PosterActions({ posterPath, title, year }: PosterActionsProps) {
 
   async function handleCopy() {
     const outcome = await copyImage(clipboardUrl!, fullUrl!);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+    flagCopied();
     toast(
       outcome === "copied-image" ? "Poster copied to clipboard" : "Poster URL copied",
       "success",
@@ -36,8 +39,7 @@ export function PosterActions({ posterPath, title, year }: PosterActionsProps) {
 
   async function handleDownload() {
     const outcome = await downloadImage(fullUrl!, posterFilename(title, year));
-    setDownloaded(true);
-    window.setTimeout(() => setDownloaded(false), 1500);
+    flagDownloaded();
     toast(
       outcome === "downloaded" ? "Poster downloaded" : "Poster opened in a new tab",
       "success",
@@ -50,19 +52,20 @@ export function PosterActions({ posterPath, title, year }: PosterActionsProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" size="sm" onClick={handleCopy}>
+    <div className="flex justify-center gap-1">
+      <IconAction label="Copy poster image" variant="secondary" onClick={handleCopy}>
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-        Copy image
-      </Button>
-      <Button variant="secondary" size="sm" onClick={handleDownload}>
-        {downloaded ? <Check className="size-4" /> : <Download className="size-4" />}
-        Download
-      </Button>
-      <Button variant="secondary" size="sm" onClick={handleCopyUrl}>
+      </IconAction>
+      <IconAction label="Download poster" variant="secondary" onClick={handleDownload}>
+        {downloaded ? (
+          <Check className="size-4" />
+        ) : (
+          <Download className="size-4" />
+        )}
+      </IconAction>
+      <IconAction label="Copy poster URL" variant="secondary" onClick={handleCopyUrl}>
         <Link className="size-4" />
-        Copy URL
-      </Button>
+      </IconAction>
     </div>
   );
 }
