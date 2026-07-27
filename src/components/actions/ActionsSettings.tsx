@@ -1,13 +1,11 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
-  Download,
   Pencil,
   Plus,
   RotateCcw,
   Trash2,
-  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,11 +20,10 @@ import type { ActionDef } from "@/types";
 type EditTarget = ActionDef | "new" | null;
 
 export function ActionsSettings() {
-  const { actions, addAction, updateAction, removeAction, moveAction, replaceAll, resetToDefaults } =
+  const { actions, addAction, updateAction, removeAction, moveAction, resetToDefaults } =
     useActions();
   const [editing, setEditing] = useState<EditTarget>(null);
   const [confirmReset, setConfirmReset] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   if (editing) {
     return (
@@ -42,29 +39,6 @@ export function ActionsSettings() {
       />
     );
   }
-
-  const handleExport = () => {
-    const json = JSON.stringify(actions, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "watchbridge-actions.json";
-    anchor.click();
-    URL.revokeObjectURL(url);
-    toast("Actions exported", "success");
-  };
-
-  const handleImport = async (file: File) => {
-    try {
-      const parsed = JSON.parse(await file.text());
-      if (!Array.isArray(parsed)) throw new Error("Not an actions array");
-      replaceAll(parsed as ActionDef[]);
-      toast(`Imported ${parsed.length} actions`, "success");
-    } catch {
-      toast("Import failed — invalid actions file", "error");
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -93,39 +67,17 @@ export function ActionsSettings() {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fileRef.current?.click()}
-        >
-          <Upload className="h-4 w-4" />
-          Import
-        </Button>
+      {/* Backing these up lives in General → Backup & restore, with the rest. */}
+      <div className="flex border-t border-border pt-4">
         <Button
           variant="ghost"
           size="sm"
-          className="ml-auto text-muted-foreground"
+          className="text-muted-foreground"
           onClick={() => setConfirmReset(true)}
         >
           <RotateCcw className="h-4 w-4" />
           Reset to defaults
         </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void handleImport(file);
-            e.target.value = "";
-          }}
-        />
       </div>
 
       <ConfirmDialog

@@ -133,7 +133,6 @@ interface ActionsState {
   updateAction: (id: string, patch: Partial<ActionDef>) => void;
   removeAction: (id: string) => void;
   moveAction: (id: string, direction: -1 | 1) => void;
-  replaceAll: (actions: ActionDef[]) => void;
   resetToDefaults: () => void;
 }
 
@@ -160,7 +159,6 @@ export const useActions = create<ActionsState>()(
           [actions[index], actions[target]] = [actions[target], actions[index]];
           return { actions };
         }),
-      replaceAll: (actions) => set({ actions }),
       resetToDefaults: () => set({ actions: DEFAULT_ACTIONS }),
     }),
     {

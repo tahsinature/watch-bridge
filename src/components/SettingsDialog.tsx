@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { ExternalLink, Eye, EyeOff, KeyRound, NotebookPen } from "lucide-react";
+import {
+  DatabaseBackup,
+  Download,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  KeyRound,
+  NotebookPen,
+  Upload,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +20,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { JsonExportDialog } from "@/components/ui/json-export-dialog";
+import { JsonImportDialog } from "@/components/ui/json-import-dialog";
 import { ActionsSettings } from "@/components/actions/ActionsSettings";
+import { buildBackup, restoreBackup, BackupError } from "@/lib/backup";
+import { todayStamp } from "@/lib/download";
 import { useSettings } from "@/stores/settings";
+import { toast } from "@/stores/toast";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -39,6 +54,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <TabsContent value="general" className="mt-5 space-y-6">
             <ApiKeySection />
             <NotionSection />
+            <BackupSection />
           </TabsContent>
 
           <TabsContent value="actions" className="mt-5">
@@ -133,6 +149,80 @@ function NotionSection() {
         Where “Log to Notion” opens after copying a formatted note. Leave blank to
         open a fresh Notion tab.
       </p>
+    </div>
+  );
+}
+
+function BackupSection() {
+  const [includeApiKey, setIncludeApiKey] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
+  /** Returning a message keeps the import dialog open with the reason shown. */
+  const handleRestore = (data: unknown): string | void => {
+    try {
+      const summary = restoreBackup(data);
+      const skipped = summary.skipped > 0 ? `, ${summary.skipped} skipped` : "";
+      toast(
+        `Restored ${summary.library} titles and ${summary.actions} actions${skipped}`,
+        "success",
+      );
+    } catch (error) {
+      return error instanceof BackupError ? error.message : "Restore failed";
+    }
+  };
+
+  return (
+    <div className="space-y-3 border-t border-border pt-5">
+      <div className="flex items-center gap-2">
+        <DatabaseBackup className="h-4 w-4 text-primary" />
+        <Label>Backup &amp; restore</Label>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Everything lives in this browser only. Export to move your library,
+        actions and preferences to another browser or device.
+      </p>
+
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+          <Download className="h-4 w-4" />
+          Export
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4" />
+          Import
+        </Button>
+      </div>
+
+      <JsonExportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        title="Export everything"
+        description="Copy the JSON or save it as a file — both carry the same data."
+        filename={`watchbridge-backup-${todayStamp()}.json`}
+        data={buildBackup(includeApiKey)}
+      >
+        <label className="flex items-center justify-between gap-4 border border-border p-3">
+          <span className="text-sm">
+            Include TMDB API key
+            <span className="block text-xs text-muted-foreground">
+              Off keeps this safe to paste or store anywhere. On makes
+              restoring a single step — then treat it as a secret.
+            </span>
+          </span>
+          <Switch checked={includeApiKey} onCheckedChange={setIncludeApiKey} />
+        </label>
+      </JsonExportDialog>
+
+      <JsonImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Restore from backup"
+        description="This replaces your current settings, actions, library, ratings and history. Export first if you want to keep what you have."
+        confirmLabel="Restore"
+        destructive
+        onImport={handleRestore}
+      />
     </div>
   );
 }
