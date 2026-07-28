@@ -23,11 +23,12 @@ export function Toaster() {
   const dismiss = useToasts((s) => s.dismiss);
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-full max-w-xs flex-col gap-2">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2">
       <AnimatePresence initial={false}>
         {toasts.map((t) => (
           <motion.div
             key={t.id}
+            data-watchbridge-toast
             layout
             initial={{ opacity: 0, y: 16, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -38,8 +39,27 @@ export function Toaster() {
               variantStyles[t.variant].ring,
             )}
           >
-            {variantStyles[t.variant].icon}
-            <span className="flex-1 text-foreground/90">{t.message}</span>
+            {t.details?.image ? (
+              <img
+                src={t.details.image.src}
+                alt={t.details.image.alt}
+                className="h-16 w-11 shrink-0 border border-border object-cover"
+              />
+            ) : (
+              variantStyles[t.variant].icon
+            )}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-foreground/90">
+                {t.details?.image && variantStyles[t.variant].icon}
+                <span>{t.message}</span>
+              </div>
+              {t.details?.description && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t.details.description}
+                </p>
+              )}
+            </div>
             <button
               onClick={() => dismiss(t.id)}
               className="text-muted-foreground transition-colors hover:text-foreground"

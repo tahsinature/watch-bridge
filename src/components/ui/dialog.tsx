@@ -69,13 +69,23 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> &
     VariantProps<typeof dialogContentVariants>
->(({ className, children, variant, ...props }, ref) => (
+>(({ className, children, variant, onPointerDownOutside, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(dialogContentVariants({ variant }), className)}
       {...props}
+      onPointerDownOutside={(event) => {
+        onPointerDownOutside?.(event);
+        const target = event.detail.originalEvent.target;
+        if (
+          target instanceof Element &&
+          target.closest("[data-watchbridge-toast]")
+        ) {
+          event.preventDefault();
+        }
+      }}
     >
       {children}
       <DialogPrimitive.Close className={cn(dialogCloseVariants({ variant }))}>

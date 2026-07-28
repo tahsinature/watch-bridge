@@ -2,7 +2,7 @@ import { Check, Copy, Download, Link } from "lucide-react";
 import { IconAction } from "@/components/ui/icon-action";
 import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { copyImage, downloadImage } from "@/lib/poster";
-import { posterFilename } from "@/lib/format";
+import { formatFileSize, posterFilename } from "@/lib/format";
 import { posterUrl } from "@/lib/tmdb";
 import { toast } from "@/stores/toast";
 
@@ -31,10 +31,17 @@ export function PosterActions({ posterPath, title, year }: PosterActionsProps) {
   async function handleCopy() {
     const outcome = await copyImage(clipboardUrl!, fullUrl!);
     flagCopied();
-    toast(
-      outcome === "copied-image" ? "Poster copied to clipboard" : "Poster URL copied",
-      "success",
-    );
+    if (outcome.kind === "copied-image") {
+      toast("Poster copied to clipboard", "success", {
+        description: `PNG · ${outcome.width} × ${outcome.height} · ${formatFileSize(outcome.bytes)}`,
+        image: {
+          src: clipboardUrl!,
+          alt: `${title} poster`,
+        },
+      });
+      return;
+    }
+    toast("Poster URL copied", "success");
   }
 
   async function handleDownload() {

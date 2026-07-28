@@ -5,7 +5,14 @@
  */
 
 export type DownloadOutcome = "downloaded" | "opened";
-export type CopyOutcome = "copied-image" | "copied-url";
+export type CopyOutcome =
+  | {
+      kind: "copied-image";
+      width: number;
+      height: number;
+      bytes: number;
+    }
+  | { kind: "copied-url" };
 
 /**
  * Browsers only accept `image/png` for clipboard image writes, and PNG is
@@ -51,16 +58,23 @@ export async function copyImage(
     if (!clipboard || !("write" in clipboard) || typeof ClipboardItem === "undefined") {
       throw new Error("clipboard image write unsupported");
     }
-    const pngBlob = await urlToPngBlob(url);
-    await clipboard.write([new ClipboardItem({ "image/png": pngBlob })]);
-    return "copied-image";
+    const png = await urlToPngBlob(url);
+    await clipboard.write([new ClipboardItem({ "image/png": png.blob })]);
+    return {
+      kind: "copied-image",
+      width: png.width,
+      height: png.height,
+      bytes: png.blob.size,
+    };
   } catch {
     await navigator.clipboard.writeText(fallbackUrl);
-    return "copied-url";
+    return { kind: "copied-url" };
   }
 }
 
-async function urlToPngBlob(url: string): Promise<Blob> {
+async function urlToPngBlob(
+  url: string,
+): Promise<{ blob: Blob; width: number; height: number }> {
   const img = await loadImage(url);
   const longEdge = Math.max(img.naturalWidth, img.naturalHeight);
   const scale = Math.min(1, CLIPBOARD_MAX_EDGE / longEdge);
@@ -74,12 +88,14 @@ async function urlToPngBlob(url: string): Promise<Blob> {
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  return await new Promise<Blob>((resolve, reject) => {
+  const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))),
       "image/png",
     );
   });
+
+  return { blob, width: canvas.width, height: canvas.height };
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {

@@ -17,6 +17,13 @@ export function formatVotes(count: number): string {
   return String(count);
 }
 
+/** Human-readable binary file size, e.g. 1843200 -> "1.8 MB". */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+}
+
 /**
  * Release span. Movies show a single date; series show first → last air date,
  * or "→ ongoing" while still in production.
