@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Star } from "lucide-react";
-import { formatRating, formatVotes } from "@/lib/format";
+import { AudienceSignal } from "@/components/ui/audience-signal";
+import { formatRating } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ratingBadgeVariants = cva(
@@ -15,7 +16,7 @@ const ratingBadgeVariants = cva(
         /** Over poster artwork that has a gradient behind it. */
         overlay: "text-[11px] [&_svg]:size-3",
         /** Over bare artwork, so it brings its own backing. */
-        chip: "border border-gold/30 bg-black/70 px-1.5 py-0.5 text-[11px] [&_svg]:size-3",
+        chip: "border border-white/15 bg-black/70 px-1.5 py-0.5 text-[11px] [&_svg]:size-3",
       },
     },
     defaultVariants: { variant: "plain" },
@@ -50,20 +51,15 @@ export function RatingBadge({
   return (
     <span
       className={cn(ratingBadgeVariants({ variant }), className)}
-      title={votes > 0 ? `${votes.toLocaleString()} votes` : undefined}
     >
       <Star className="fill-gold text-gold" />
       {rating}
       {votes > 0 && (
-        <span
-          className={cn(
-            "font-normal",
-            onArtwork ? "text-white/70" : "text-muted-foreground",
-          )}
-        >
-          ({formatVotes(votes)}
-          {variant === "detail" ? " votes" : ""})
-        </span>
+        <AudienceSignal
+          votes={votes}
+          onArtwork={onArtwork}
+          showLabel={variant === "detail"}
+        />
       )}
     </span>
   );

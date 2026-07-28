@@ -1,4 +1,7 @@
-import { useActions } from "@/stores/actions";
+import {
+  RETIRED_DEFAULT_ACTION_IDS,
+  useActions,
+} from "@/stores/actions";
 import { useLibrary } from "@/stores/library";
 import { useRecentSearches } from "@/stores/recent";
 import { useRecentTitles, type RecentTitle } from "@/stores/recentTitles";
@@ -67,6 +70,7 @@ function isActionDef(v: unknown): v is ActionDef {
     typeof v.name === "string" &&
     typeof v.template === "string" &&
     typeof v.enabled === "boolean" &&
+    !RETIRED_DEFAULT_ACTION_IDS.has(v.id) &&
     ACTION_TYPES.includes(v.type as string) &&
     ACTION_GROUPS.includes(v.group as string)
   );

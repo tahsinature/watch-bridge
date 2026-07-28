@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconAction } from "@/components/ui/icon-action";
+import { RatingBadge } from "@/components/ui/rating-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
 import { ActionBar } from "@/components/actions/ActionBar";
@@ -143,17 +144,25 @@ function DetailBody({
                 {details.mediaType === "tv" ? "Series" : "Film"}
               </Badge>
             </div>
-            <div className="flex items-start gap-1">
-              <h2 className="min-w-0 text-balance text-xl font-bold leading-tight sm:text-2xl">
-                {details.title}
-              </h2>
-              <IconAction label="Copy title and year" onClick={copyTitle}>
-                {titleCopied ? (
-                  <Check className="size-4" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-              </IconAction>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <div className="flex min-w-0 items-start gap-1">
+                <h2 className="min-w-0 text-balance text-xl font-bold leading-tight sm:text-2xl">
+                  {details.title}
+                </h2>
+                <IconAction label="Copy title and year" onClick={copyTitle}>
+                  {titleCopied ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
+                </IconAction>
+              </div>
+              <RatingBadge
+                average={details.voteAverage}
+                votes={details.voteCount}
+                variant="detail"
+                className="shrink-0"
+              />
             </div>
             {details.originalTitle && details.originalTitle !== details.title && (
               <p className="mt-0.5 text-sm text-muted-foreground">

@@ -1,4 +1,5 @@
 import { Check, Copy } from "lucide-react";
+import { IconAction } from "@/components/ui/icon-action";
 import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { toast } from "@/stores/toast";
 
@@ -8,7 +9,7 @@ interface CopyTextButtonProps {
   toastMessage: string;
 }
 
-/** Small inline "copy this text" control for section headers. */
+/** Compact icon action for copying a nearby block of text. */
 export function CopyTextButton({ value, label, toastMessage }: CopyTextButtonProps) {
   const [copied, flagCopied] = useCopiedFlag();
 
@@ -19,12 +20,8 @@ export function CopyTextButton({ value, label, toastMessage }: CopyTextButtonPro
   };
 
   return (
-    <button
-      onClick={handleCopy}
-      className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
-    >
+    <IconAction label={label} onClick={() => void handleCopy()}>
       {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      {label}
-    </button>
+    </IconAction>
   );
 }

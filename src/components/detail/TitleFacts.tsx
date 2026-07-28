@@ -1,21 +1,15 @@
 import { ExternalLink, Shield } from "lucide-react";
 import { AdultBadge } from "@/components/ui/adult-badge";
 import { Badge } from "@/components/ui/badge";
-import { RatingBadge } from "@/components/ui/rating-badge";
 import { CopyTextButton } from "@/components/ui/copy-text-button";
 import { LabeledBlock, LabeledRow } from "./LabeledRow";
 import { useSettings } from "@/stores/settings";
-import {
-  formatRating,
-  formatReleaseSpan,
-  formatRuntime,
-} from "@/lib/format";
+import { formatReleaseSpan, formatRuntime } from "@/lib/format";
 import { parentsGuideUrl } from "@/lib/parentsGuide";
 import type { TitleDetails } from "@/types";
 
 /** Key facts as labeled rows — scannable and comparable across titles. */
 export function TitleFacts({ details }: { details: TitleDetails }) {
-  const rating = formatRating(details.voteAverage);
   const runtime = formatRuntime(details.runtime);
   const isSeries = details.mediaType === "tv";
   const languages = details.spokenLanguages.length
@@ -30,6 +24,21 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
 
   return (
     <LabeledBlock>
+      {details.overview && (
+        <LabeledRow label="Description">
+          <div className="flex items-start gap-2">
+            <p className="min-w-0 flex-1 text-sm leading-relaxed text-foreground/80">
+              {details.overview}
+            </p>
+            <CopyTextButton
+              value={details.overview}
+              label="Copy description"
+              toastMessage="Description copied"
+            />
+          </div>
+        </LabeledRow>
+      )}
+
       <LabeledRow label="Release">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm">{formatReleaseSpan(details)}</span>
@@ -71,16 +80,6 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
         </LabeledRow>
       )}
 
-      {rating && (
-        <LabeledRow label="Rating">
-          <RatingBadge
-            average={details.voteAverage}
-            votes={details.voteCount}
-            variant="detail"
-          />
-        </LabeledRow>
-      )}
-
       {certification && (
         <LabeledRow label="Age rating">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
@@ -119,20 +118,6 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
         </LabeledRow>
       )}
 
-      {details.overview && (
-        <LabeledRow label="Overview">
-          <div className="flex flex-col items-start gap-2">
-            <p className="text-sm leading-relaxed text-foreground/80">
-              {details.overview}
-            </p>
-            <CopyTextButton
-              value={details.overview}
-              label="Copy overview"
-              toastMessage="Overview copied"
-            />
-          </div>
-        </LabeledRow>
-      )}
     </LabeledBlock>
   );
 }

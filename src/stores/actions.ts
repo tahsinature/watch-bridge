@@ -104,11 +104,10 @@ export const DEFAULT_ACTIONS: ActionDef[] = [
 ];
 
 /**
- * Bump when a new entry is added to DEFAULT_ACTIONS, and list its id below.
- * Existing users already have a persisted action list, so new defaults only
- * reach them through a migration.
+ * Bump when a default action is added or retired. Existing users already have
+ * a persisted action list, so both changes must go through a migration.
  */
-const STORE_VERSION = 1;
+const STORE_VERSION = 2;
 
 /**
  * Default action ids introduced in each store version. Migrating adds only
@@ -117,6 +116,16 @@ const STORE_VERSION = 1;
 const ADDED_IN_VERSION: Record<number, string[]> = {
   1: ["tmdb"],
 };
+
+/** Retired built-in actions that would otherwise linger in local storage. */
+const REMOVED_IN_VERSION: Record<number, string[]> = {
+  2: ["copy-title"],
+};
+
+/** Prevent retired built-ins from returning through an older backup. */
+export const RETIRED_DEFAULT_ACTION_IDS = new Set(
+  Object.values(REMOVED_IN_VERSION).flat(),
+);
 
 interface ActionsState {
   actions: ActionDef[];
@@ -172,7 +181,14 @@ export const useActions = create<ActionsState>()(
           (a) => newIds.includes(a.id) && !existing.has(a.id),
         );
 
-        return { ...state, actions: [...actions, ...additions] };
+        const removedIds = new Set(
+          Object.entries(REMOVED_IN_VERSION)
+            .filter(([version]) => Number(version) > fromVersion)
+            .flatMap(([, ids]) => ids),
+        );
+        const retained = actions.filter((action) => !removedIds.has(action.id));
+
+        return { ...state, actions: [...retained, ...additions] };
       },
     },
   ),
