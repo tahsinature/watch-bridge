@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   discoverByGenre,
   getDetails,
@@ -100,5 +100,18 @@ export function usePerson(id: number | undefined, enabled: boolean) {
     queryKey: ["person", id, apiKey],
     queryFn: () => getPerson(apiKey, id!),
     enabled: enabled && apiKey.length > 0 && !!id,
+  });
+}
+
+/** Fetch several people in parallel while sharing `usePerson` cache entries. */
+export function usePeople(ids: number[], enabled: boolean) {
+  const apiKey = useSettings((s) => s.tmdbApiKey);
+
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: ["person", id, apiKey],
+      queryFn: () => getPerson(apiKey, id),
+      enabled: enabled && apiKey.length > 0,
+    })),
   });
 }

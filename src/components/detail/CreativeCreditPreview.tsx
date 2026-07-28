@@ -6,9 +6,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { usePerson } from "@/hooks/useTmdb";
-import { toSelectionRef } from "@/lib/library";
+import { usePeople } from "@/hooks/useTmdb";
+import { itemKey, toSelectionRef } from "@/lib/library";
 import type {
+  PersonDetails,
   PersonCredit,
   SearchResult,
   SelectionRef,
@@ -17,22 +18,27 @@ import type {
 const PREVIEW_LIMIT = 5;
 
 interface CreativeCreditPreviewProps {
-  person: PersonCredit;
+  people: PersonCredit[];
   onSelectTitle: (ref: SelectionRef) => void;
 }
 
-/** Compact, cached preview of a director or creator's most-voted titles. */
+/** Combined, cached preview of every listed director or creator's top titles. */
 export function CreativeCreditPreview({
-  person,
+  people,
   onSelectTitle,
 }: CreativeCreditPreviewProps) {
-  const { data, isLoading } = usePerson(person.id, true);
+  const peopleQueries = usePeople(
+    people.map((person) => person.id),
+    people.length > 0,
+  );
+  const names = people.map((person) => person.name).join(", ");
+  const isLoading = peopleQueries.some((query) => query.isLoading);
 
   if (isLoading) {
     return (
       <div
         className="flex shrink-0 items-center gap-1"
-        aria-label={`Loading top titles by ${person.name}`}
+        aria-label={`Loading top titles by ${names}`}
       >
         {Array.from({ length: PREVIEW_LIMIT }).map((_, index) => (
           <Skeleton key={index} className="h-9 w-6 rounded-none" />
@@ -41,13 +47,15 @@ export function CreativeCreditPreview({
     );
   }
 
-  const credits = data?.creativeCredits.slice(0, PREVIEW_LIMIT) ?? [];
+  const credits = combinedTopCredits(
+    peopleQueries.map((query) => query.data),
+  );
   if (credits.length === 0) return null;
 
   return (
     <div
       className="flex shrink-0 items-center gap-1"
-      aria-label={`Top titles by ${person.name}`}
+      aria-label={`Top titles by ${names}`}
     >
       {credits.map((credit) => (
         <CreditPoster
@@ -60,6 +68,23 @@ export function CreativeCreditPreview({
   );
 }
 
+function combinedTopCredits(
+  people: Array<PersonDetails | undefined>,
+): SearchResult[] {
+  const uniqueCredits = new Map<string, SearchResult>();
+
+  for (const person of people) {
+    for (const credit of person?.creativeCredits ?? []) {
+      const key = itemKey(credit.id, credit.mediaType);
+      if (!uniqueCredits.has(key)) uniqueCredits.set(key, credit);
+    }
+  }
+
+  return [...uniqueCredits.values()]
+    .sort((a, b) => b.voteCount - a.voteCount)
+    .slice(0, PREVIEW_LIMIT);
+}
+
 function CreditPoster({
   credit,
   onSelect,
@@ -68,7 +93,7 @@ function CreditPoster({
   onSelect: () => void;
 }) {
   return (
-    <Tooltip>
+    <Tooltip disableHoverableContent>
       <TooltipTrigger asChild>
         <button
           type="button"

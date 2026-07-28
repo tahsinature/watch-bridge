@@ -157,7 +157,7 @@ export function TitleFacts({
             </span>
 
             <CreativeCreditPreview
-              person={details.directors[0]}
+              people={details.directors}
               onSelectTitle={onSelectTitle}
             />
           </div>
