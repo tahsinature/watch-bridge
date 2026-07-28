@@ -11,8 +11,6 @@ import { toast } from "@/stores/toast";
 import { itemKey, toSelectionRef } from "@/lib/library";
 import type { LibraryItem, SelectionRef } from "@/types";
 
-const MAX_COMPARE = 4;
-
 export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => void }) {
   const items = useLibrary((s) => s.items);
   const remove = useLibrary((s) => s.remove);
@@ -33,9 +31,6 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
       const next = new Set(prev);
       if (next.has(key)) {
         next.delete(key);
-      } else if (next.size >= MAX_COMPARE) {
-        toast(`Compare up to ${MAX_COMPARE} titles at once`, "error");
-        return prev;
       } else {
         next.add(key);
       }
@@ -46,6 +41,8 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
   const compareItems = shortlist.filter((i) =>
     selected.has(itemKey(i.id, i.mediaType)),
   );
+  const itemsToCompare =
+    compareItems.length > 0 ? compareItems : shortlist;
 
   if (shortlist.length === 0) {
     return (
@@ -69,11 +66,12 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
         <Button
           size="sm"
           className="shrink-0"
-          disabled={selected.size < 2}
           onClick={() => setCompareOpen(true)}
         >
           <GitCompareArrows className="size-4" />
-          Compare{selected.size > 0 ? ` (${selected.size})` : ""}
+          {compareItems.length > 0
+            ? `Compare (${compareItems.length})`
+            : "Compare all"}
         </Button>
       </div>
 
@@ -94,10 +92,9 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
       </div>
 
       <CompareView
-        items={compareItems}
+        items={itemsToCompare}
         open={compareOpen}
         onOpenChange={setCompareOpen}
-        onRemoveItem={(item) => toggleSelect(item)}
         onOpenDetail={(item) => {
           setCompareOpen(false);
           onSelect(toSelectionRef(item));

@@ -73,7 +73,7 @@ export function TitleFacts({
       )}
 
       {runtime && (
-        <LabeledRow label="Runtime">
+        <LabeledRow label="Length">
           <span className="text-sm">
             {runtime}
             {isSeries ? " per episode" : ""}

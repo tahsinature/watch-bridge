@@ -5,6 +5,11 @@ import {
   DEFAULT_MINIMUM_VOTES,
   isMinimumVotes,
 } from "@/lib/voteFilter";
+import {
+  DEFAULT_COMPARE_FIELDS,
+  isCompareFields,
+  type CompareField,
+} from "@/lib/compareFields";
 import type { MinimumVotes, SortOrder } from "@/types";
 
 /**
@@ -20,9 +25,12 @@ export interface SettingsState {
   sortOrder: SortOrder;
   /** Hide search and discovery results below this TMDB vote count. */
   minimumVotes: MinimumVotes;
+  /** Visible columns in the shortlist comparison table. */
+  compareFields: CompareField[];
   setTmdbApiKey: (key: string) => void;
   setSortOrder: (order: SortOrder) => void;
   setMinimumVotes: (minimumVotes: MinimumVotes) => void;
+  setCompareFields: (compareFields: CompareField[]) => void;
   setRegions: (regions: string[]) => void;
   /** Add the country if absent, remove it if present. */
   toggleRegion: (code: string) => void;
@@ -36,9 +44,11 @@ export const useSettings = create<SettingsState>()(
       regions: [detectBrowserRegion()],
       sortOrder: "votes",
       minimumVotes: DEFAULT_MINIMUM_VOTES,
+      compareFields: DEFAULT_COMPARE_FIELDS,
       setTmdbApiKey: (tmdbApiKey) => set({ tmdbApiKey: tmdbApiKey.trim() }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
       setMinimumVotes: (minimumVotes) => set({ minimumVotes }),
+      setCompareFields: (compareFields) => set({ compareFields }),
       setRegions: (regions) => set({ regions }),
       toggleRegion: (code) =>
         set((s) => ({
@@ -49,7 +59,7 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "watchbridge.settings",
-      version: 3,
+      version: 4,
       migrate: (persisted) => {
         if (typeof persisted !== "object" || persisted === null) {
           return persisted as SettingsState;
@@ -60,6 +70,9 @@ export const useSettings = create<SettingsState>()(
         delete settings.includeAdult;
         if (!isMinimumVotes(settings.minimumVotes)) {
           settings.minimumVotes = DEFAULT_MINIMUM_VOTES;
+        }
+        if (!isCompareFields(settings.compareFields)) {
+          settings.compareFields = DEFAULT_COMPARE_FIELDS;
         }
         return settings as unknown as SettingsState;
       },

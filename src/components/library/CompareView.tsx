@@ -1,4 +1,4 @@
-import { Clock, X } from "lucide-react";
+import { Check, Settings2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -6,20 +6,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { AdultBadge } from "@/components/ui/adult-badge";
-import { PosterImage } from "@/components/ui/poster-image";
-import { RatingBadge } from "@/components/ui/rating-badge";
-import { StarRating } from "@/components/ui/star-rating";
-import { useDetails } from "@/hooks/useTmdb";
-import { formatRuntime } from "@/lib/format";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { CompareTableRow } from "./CompareTableRow";
+import {
+  COMPARE_FIELD_OPTIONS,
+  DEFAULT_COMPARE_FIELDS,
+  type CompareField,
+} from "@/lib/compareFields";
+import { cn } from "@/lib/utils";
+import { useSettings } from "@/stores/settings";
 import type { LibraryItem } from "@/types";
 
 interface CompareViewProps {
   items: LibraryItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRemoveItem: (item: LibraryItem) => void;
   onOpenDetail: (item: LibraryItem) => void;
 }
 
@@ -27,116 +40,169 @@ export function CompareView({
   items,
   open,
   onOpenChange,
-  onRemoveItem,
   onOpenDetail,
 }: CompareViewProps) {
+  const region = useSettings((state) => state.regions[0]);
+  const compareFields = useSettings((state) => state.compareFields);
+  const setCompareFields = useSettings((state) => state.setCompareFields);
+
+  const toggleField = (field: CompareField) => {
+    setCompareFields(
+      compareFields.includes(field)
+        ? compareFields.filter((current) => current !== field)
+        : [...compareFields, field],
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[min(92vw,64rem)] max-w-none gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b border-border p-5">
-          <DialogTitle>Compare {items.length} titles</DialogTitle>
-          <DialogDescription>
-            Side by side — pick what to watch next.
+      <DialogContent className="max-h-[92vh] w-[min(96vw,80rem)] max-w-none gap-0 overflow-hidden p-0">
+        <DialogHeader className="flex-row items-center justify-between gap-4 border-b border-border px-5 py-4 pr-14">
+          <DialogTitle>
+            Compare{" "}
+            <span className="font-normal text-muted-foreground">
+              {items.length}
+            </span>
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Compare shortlisted titles in a configurable table.
           </DialogDescription>
+          <CompareFieldPicker
+            fields={compareFields}
+            onToggle={toggleField}
+            onReset={() => setCompareFields(DEFAULT_COMPARE_FIELDS)}
+          />
         </DialogHeader>
 
-        <div className="flex gap-4 overflow-x-auto p-5 scrollbar-thin">
-          {items.map((item) => (
-            <CompareColumn
-              key={`${item.mediaType}-${item.id}`}
-              item={item}
-              onRemove={() => onRemoveItem(item)}
-              onOpen={() => onOpenDetail(item)}
-            />
-          ))}
-        </div>
+        <CompareTable
+          items={items}
+          fields={compareFields}
+          region={region}
+          onOpenDetail={onOpenDetail}
+        />
       </DialogContent>
     </Dialog>
   );
 }
 
-function CompareColumn({
-  item,
-  onRemove,
-  onOpen,
+function CompareFieldPicker({
+  fields,
+  onToggle,
+  onReset,
 }: {
-  item: LibraryItem;
-  onRemove: () => void;
-  onOpen: () => void;
+  fields: CompareField[];
+  onToggle: (field: CompareField) => void;
+  onReset: () => void;
 }) {
-  const { data } = useDetails(item.mediaType, item.id, true);
-  const genres = data?.genres.length ? data.genres : item.genres;
-  const runtime = formatRuntime(data?.runtime ?? item.runtime);
-  const overview = data?.overview || item.overview;
-  // Vote count only exists on the fetched details, so read the average from
-  // there too — a stored average beside a fresh count could disagree.
-  const voteAverage = data?.voteAverage ?? item.voteAverage;
-  const voteCount = data?.voteCount ?? 0;
-  const adult = data?.adult ?? item.adult;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Settings2 />
+          Fields
+          <span className="border-l border-border pl-2 text-muted-foreground">
+            {fields.length}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-2" align="end">
+        <div className="mb-1 flex items-center justify-between px-2 py-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Visible fields
+          </p>
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-[10px] uppercase tracking-wider text-primary hover:underline"
+          >
+            Reset
+          </button>
+        </div>
+        {COMPARE_FIELD_OPTIONS.map((field) => {
+          const selected = fields.includes(field.id);
+          return (
+            <button
+              key={field.id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => onToggle(field.id)}
+              className={cn(
+                "flex w-full items-center gap-2 px-2 py-2 text-left text-xs transition-colors hover:bg-secondary",
+                selected && "text-foreground",
+                !selected && "text-muted-foreground",
+              )}
+            >
+              <span
+                className={cn(
+                  "grid size-4 place-items-center border",
+                  selected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border",
+                )}
+              >
+                {selected ? <Check className="size-3" /> : null}
+              </span>
+              {field.label}
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function CompareTable({
+  items,
+  fields,
+  region,
+  onOpenDetail,
+}: {
+  items: LibraryItem[];
+  fields: CompareField[];
+  region: string | undefined;
+  onOpenDetail: (item: LibraryItem) => void;
+}) {
+  const visibleOptions = COMPARE_FIELD_OPTIONS.filter((field) =>
+    fields.includes(field.id),
+  );
 
   return (
-    <div className="relative flex w-56 shrink-0 flex-col rounded-xl border border-border bg-secondary/20">
-      <button
-        onClick={onRemove}
-        aria-label="Remove from comparison"
-        className="absolute right-2 top-2 z-10 grid size-6 place-items-center border border-white/15 bg-black/70 text-white/80 transition-colors hover:border-destructive hover:text-destructive"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-
-      <button
-        onClick={onOpen}
-        className="aspect-[2/3] w-full overflow-hidden rounded-t-xl bg-secondary"
-      >
-        <PosterImage path={item.posterPath} alt={item.title} />
-      </button>
-
-      <div className="flex flex-1 flex-col gap-2.5 p-3">
-        <div>
-          <p className="line-clamp-2 text-sm font-semibold leading-snug">
-            {item.title}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {item.year} · {item.mediaType === "tv" ? "Series" : "Film"}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <RatingBadge average={voteAverage} votes={voteCount} />
-          <AdultBadge adult={adult} />
-          {runtime && (
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" />
-              {runtime}
-            </span>
-          )}
-        </div>
-
-        {item.userRating != null && (
-          <div>
-            <p className="mb-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-              Your rating
-            </p>
-            <StarRating value={item.userRating} size="sm" />
-          </div>
-        )}
-
-        {genres.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {genres.slice(0, 3).map((g) => (
-              <Badge key={g} variant="outline" className="px-1.5 py-0 text-[10px]">
-                {g}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {overview && (
-          <p className="line-clamp-5 text-xs leading-relaxed text-muted-foreground">
-            {overview}
-          </p>
-        )}
-      </div>
-    </div>
+    <Table
+      containerClassName="max-h-[calc(92vh-4.5rem)] scrollbar-thin"
+      className="min-w-max border-separate border-spacing-0"
+    >
+      <TableHeader className="sticky top-0 z-30 bg-popover shadow-[0_1px_0_hsl(var(--border))]">
+        <TableRow className="hover:bg-transparent">
+          <TableHead className="sticky left-0 z-40 min-w-64 border-r border-border bg-popover px-4 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Title
+          </TableHead>
+          {visibleOptions.map((field) => (
+            <TableHead
+              key={field.id}
+              className={cn(
+                "px-4 text-[10px] uppercase tracking-wider text-muted-foreground",
+                field.id === "genres" && "min-w-44",
+                field.id === "watchProviders" && "min-w-48",
+              )}
+            >
+              {field.id === "watchProviders" && region
+                ? `${field.label} · ${region}`
+                : field.label}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((item) => (
+          <CompareTableRow
+            key={`${item.mediaType}-${item.id}`}
+            item={item}
+            fields={fields}
+            region={region}
+            onOpen={() => onOpenDetail(item)}
+          />
+        ))}
+      </TableBody>
+    </Table>
   );
 }

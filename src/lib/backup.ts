@@ -7,6 +7,7 @@ import { useRecentSearches } from "@/stores/recent";
 import { useRecentTitles, type RecentTitle } from "@/stores/recentTitles";
 import { useSettings, type SettingsState } from "@/stores/settings";
 import { isMinimumVotes } from "@/lib/voteFilter";
+import { isCompareFields } from "@/lib/compareFields";
 import type { ActionDef, LibraryItem } from "@/types";
 
 const APP_TAG = "watchbridge";
@@ -30,7 +31,7 @@ export interface BackupFile {
 }
 
 export function buildBackup(): BackupFile {
-  const { tmdbApiKey, regions, sortOrder, minimumVotes } =
+  const { tmdbApiKey, regions, sortOrder, minimumVotes, compareFields } =
     useSettings.getState();
 
   return {
@@ -43,6 +44,7 @@ export function buildBackup(): BackupFile {
         regions,
         sortOrder,
         minimumVotes,
+        compareFields,
       },
       actions: useActions.getState().actions,
       library: useLibrary.getState().items,
@@ -167,6 +169,9 @@ export function restoreBackup(raw: unknown): RestoreSummary {
     }
     if (isMinimumVotes(s.minimumVotes)) {
       patch.minimumVotes = s.minimumVotes;
+    }
+    if (isCompareFields(s.compareFields)) {
+      patch.compareFields = s.compareFields;
     }
     useSettings.setState(patch);
     summary.settings = Object.keys(patch).length > 0;
