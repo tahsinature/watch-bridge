@@ -5,6 +5,7 @@ import type {
   Genre,
   MediaType,
   PersonDetails,
+  PersonCredit,
   SearchResult,
   TitleDetails,
   Trailer,
@@ -216,7 +217,7 @@ interface RawDetails {
   number_of_episodes?: number;
   genres?: { id: number; name: string }[];
   spoken_languages?: { english_name: string; name: string }[];
-  created_by?: { name: string }[];
+  created_by?: { id: number; name: string }[];
   external_ids?: { imdb_id?: string | null };
   videos?: { results: RawVideo[] };
   recommendations?: { results?: RawSearchItem[] };
@@ -259,6 +260,7 @@ interface RawCast {
   profile_path?: string | null;
 }
 interface RawCrew {
+  id: number;
   name: string;
   job?: string;
 }
@@ -357,12 +359,12 @@ export async function getDetails(
     }),
   );
 
-  const directors =
+  const directors: PersonCredit[] =
     mediaType === "movie"
       ? (d.credits?.crew ?? [])
           .filter((c) => c.job === "Director")
-          .map((c) => c.name)
-      : (d.created_by ?? []).map((c) => c.name);
+          .map((c) => ({ id: c.id, name: c.name }))
+      : (d.created_by ?? []).map((c) => ({ id: c.id, name: c.name }));
 
   return {
     id: d.id,
@@ -424,7 +426,14 @@ interface RawPerson {
   profile_path?: string | null;
   known_for_department?: string;
   biography?: string;
-  combined_credits?: { cast?: RawSearchItem[] };
+  combined_credits?: {
+    cast?: RawSearchItem[];
+    crew?: RawPersonCrewCredit[];
+  };
+}
+
+interface RawPersonCrewCredit extends RawSearchItem {
+  job?: string;
 }
 
 /**
@@ -444,6 +453,18 @@ function normalizeCredits(cast?: RawSearchItem[]): SearchResult[] {
   return [...seen.values()].sort((a, b) => b.voteCount - a.voteCount);
 }
 
+const CREATIVE_JOBS = new Set(["Director", "Creator"]);
+
+function normalizeCreativeCredits(
+  crew?: RawPersonCrewCredit[],
+): SearchResult[] {
+  return normalizeCredits(
+    (crew ?? []).filter((credit) =>
+      CREATIVE_JOBS.has(credit.job ?? ""),
+    ),
+  );
+}
+
 export async function getPerson(
   apiKey: string,
   id: number,
@@ -460,6 +481,7 @@ export async function getPerson(
     profilePath: d.profile_path ?? null,
     knownForDepartment: d.known_for_department ?? "",
     biography: d.biography ?? "",
-    credits: normalizeCredits(d.combined_credits?.cast),
+    actingCredits: normalizeCredits(d.combined_credits?.cast),
+    creativeCredits: normalizeCreativeCredits(d.combined_credits?.crew),
   };
 }

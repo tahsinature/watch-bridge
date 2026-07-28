@@ -18,28 +18,28 @@ const AUDIENCE_TIERS: AudienceTier[] = [
   {
     level: 1,
     label: "Limited audience",
-    range: "Under 1,000",
+    range: "< 1K",
     maxVotes: 999,
     color: "text-slate-300",
   },
   {
     level: 2,
     label: "Established",
-    range: "1,000–4,999",
+    range: "1K–4.9K",
     maxVotes: 4_999,
     color: "text-sky-300",
   },
   {
     level: 3,
     label: "Popular",
-    range: "5,000–14,999",
+    range: "5K–14.9K",
     maxVotes: 14_999,
     color: "text-cyan-300",
   },
   {
     level: 4,
     label: "Widely rated",
-    range: "15,000+",
+    range: "15K+",
     maxVotes: null,
     color: "text-teal-300",
   },
@@ -111,18 +111,22 @@ export function AudienceSignal({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{signal}</TooltipTrigger>
-      <TooltipContent className="w-64 p-3" side="top">
-        <p className="font-medium">Audience signal</p>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-          WatchBridge tiers based on TMDB vote count.
+      <TooltipContent
+        className="w-56 rounded-none border-primary/40 bg-popover p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.9)] ring-1 ring-foreground/10"
+        side="top"
+        sideOffset={9}
+      >
+        <p className="px-1.5 text-[11px] font-semibold uppercase tracking-wider">
+          Audience signal
         </p>
-        <div className="mt-2 space-y-1">
+        <div className="mt-1.5 space-y-0.5">
           {AUDIENCE_TIERS.map((item) => (
             <div
               key={item.level}
               className={cn(
-                "grid grid-cols-[1rem_1fr_auto] items-center gap-2 px-1.5 py-1",
-                item.level === tier.level && "bg-secondary",
+                "grid grid-cols-[1rem_1fr_auto] items-center gap-2 border-l-2 border-transparent px-1.5 py-1",
+                item.level === tier.level &&
+                  "border-l-primary bg-primary/10 text-foreground",
               )}
             >
               <span className={item.color}>

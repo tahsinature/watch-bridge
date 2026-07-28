@@ -2,14 +2,27 @@ import { ExternalLink, Shield } from "lucide-react";
 import { AdultBadge } from "@/components/ui/adult-badge";
 import { Badge } from "@/components/ui/badge";
 import { CopyTextButton } from "@/components/ui/copy-text-button";
+import { CreativeCreditPreview } from "./CreativeCreditPreview";
 import { LabeledBlock, LabeledRow } from "./LabeledRow";
 import { useSettings } from "@/stores/settings";
 import { formatReleaseSpan, formatRuntime } from "@/lib/format";
 import { parentsGuideUrl } from "@/lib/parentsGuide";
-import type { TitleDetails } from "@/types";
+import type {
+  PersonSelection,
+  SelectionRef,
+  TitleDetails,
+} from "@/types";
 
 /** Key facts as labeled rows — scannable and comparable across titles. */
-export function TitleFacts({ details }: { details: TitleDetails }) {
+export function TitleFacts({
+  details,
+  onSelectPerson,
+  onSelectTitle,
+}: {
+  details: TitleDetails;
+  onSelectPerson: (person: PersonSelection) => void;
+  onSelectTitle: (ref: SelectionRef) => void;
+}) {
   const runtime = formatRuntime(details.runtime);
   const isSeries = details.mediaType === "tv";
   const languages = details.spokenLanguages.length
@@ -113,8 +126,41 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
       )}
 
       {details.directors.length > 0 && (
-        <LabeledRow label={creditLabel}>
-          <span className="text-sm">{details.directors.join(" · ")}</span>
+        <LabeledRow
+          label={creditLabel}
+          className="sm:[&>span]:self-center sm:[&>span]:pt-0"
+        >
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              {details.directors.map((person, index) => (
+                <span key={person.id} className="inline-flex items-center gap-2">
+                  {index > 0 && (
+                    <span className="text-muted-foreground" aria-hidden="true">
+                      ·
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onSelectPerson({
+                        id: person.id,
+                        creditMode: "creative",
+                      })
+                    }
+                    title={`See titles ${person.name} directed or created`}
+                    className="decoration-primary/60 underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {person.name}
+                  </button>
+                </span>
+              ))}
+            </span>
+
+            <CreativeCreditPreview
+              person={details.directors[0]}
+              onSelectTitle={onSelectTitle}
+            />
+          </div>
         </LabeledRow>
       )}
 

@@ -16,7 +16,7 @@ export function RecentTitles({ onPick }: RecentTitlesProps) {
   if (titles.length === 0) return null;
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-3">
+    <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Recently viewed</p>
         <button

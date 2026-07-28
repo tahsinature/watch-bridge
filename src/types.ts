@@ -110,7 +110,21 @@ export interface CastMember {
   profilePath: string | null;
 }
 
-/** A person, with the titles they acted in. */
+export type PersonCreditMode = "acting" | "creative";
+
+/** Person detail selection, including which side of their work to show first. */
+export interface PersonSelection {
+  id: number;
+  creditMode: PersonCreditMode;
+}
+
+/** A named creator attached to a title. */
+export interface PersonCredit {
+  id: number;
+  name: string;
+}
+
+/** A person, with their acting and directing/creator credits. */
 export interface PersonDetails {
   id: number;
   name: string;
@@ -122,7 +136,9 @@ export interface PersonDetails {
    * Acting credits, most-voted first. Deliberately SearchResult-shaped so the
    * existing result cards render them without a parallel component.
    */
-  credits: SearchResult[];
+  actingCredits: SearchResult[];
+  /** Titles explicitly credited as Director or Creator, most-voted first. */
+  creativeCredits: SearchResult[];
 }
 
 export interface WatchProvider {
@@ -170,7 +186,7 @@ export interface TitleDetails {
   homepage: string | null;
   imdbId: string | null;
   /** Movie directors, or TV creators. */
-  directors: string[];
+  directors: PersonCredit[];
   cast: CastMember[];
   trailers: Trailer[];
   /** TMDB recommendations returned alongside the title details. */

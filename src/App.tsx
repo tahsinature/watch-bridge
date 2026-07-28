@@ -71,7 +71,7 @@ export default function App() {
           onSelectPerson={setPerson}
         />
         <PersonDetail
-          personId={canShowDetails ? person : null}
+          person={canShowDetails ? person : null}
           onClose={() => setPerson(null)}
           onSelectTitle={setSelection}
         />

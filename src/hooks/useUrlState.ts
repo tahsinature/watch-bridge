@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { itemKey } from "@/lib/library";
-import type { MediaType, SelectionRef, View } from "@/types";
+import type {
+  MediaType,
+  PersonCreditMode,
+  PersonSelection,
+  SelectionRef,
+  View,
+} from "@/types";
 
 const VIEWS: View[] = ["search", "shortlist", "watched"];
 
@@ -8,8 +14,8 @@ interface UrlState {
   view: View;
   /** Open title, if any. Never set at the same time as `person`. */
   selection: SelectionRef | null;
-  /** Open person's TMDB id, if any. */
-  person: number | null;
+  /** Open person and the credit group that led to them, if any. */
+  person: PersonSelection | null;
 }
 
 /**
@@ -33,16 +39,22 @@ function parseSelection(raw: string | null): SelectionRef | null {
   return Number.isInteger(id) && id > 0 ? { id, mediaType } : null;
 }
 
-function parsePerson(raw: string | null): number | null {
+function parsePerson(
+  raw: string | null,
+  rawCreditMode: string | null,
+): PersonSelection | null {
   const id = Number(raw);
-  return raw && Number.isInteger(id) && id > 0 ? id : null;
+  if (!raw || !Number.isInteger(id) || id <= 0) return null;
+  const creditMode: PersonCreditMode =
+    rawCreditMode === "creative" ? "creative" : "acting";
+  return { id, creditMode };
 }
 
 function readUrl(): UrlState {
   const params = new URLSearchParams(window.location.search);
   // Only one detail sheet is ever open; a hand-edited URL with both defers
   // to the person rather than stacking two sheets.
-  const person = parsePerson(params.get("person"));
+  const person = parsePerson(params.get("person"), params.get("credits"));
   return {
     view: parseView(params.get("view")),
     selection: person === null ? parseSelection(params.get("title")) : null,
@@ -54,7 +66,10 @@ function readUrl(): UrlState {
 function toUrl({ view, selection, person }: UrlState): string {
   const params = new URLSearchParams();
   if (view !== "search") params.set("view", view);
-  if (person !== null) params.set("person", String(person));
+  if (person !== null) {
+    params.set("person", String(person.id));
+    if (person.creditMode === "creative") params.set("credits", "creative");
+  }
   else if (selection) params.set("title", itemKey(selection.id, selection.mediaType));
   const query = params.toString();
   return query ? `?${query}` : window.location.pathname;
@@ -110,7 +125,7 @@ export function useUrlState() {
   );
 
   const setPerson = useCallback(
-    (person: number | null) => {
+    (person: PersonSelection | null) => {
       if (person === null) return closeDetail();
       push({ view: state.view, selection: null, person });
     },

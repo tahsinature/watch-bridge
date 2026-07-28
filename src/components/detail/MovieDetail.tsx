@@ -31,13 +31,17 @@ import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { useSyncLibraryMetadata } from "@/stores/library";
 import { toast } from "@/stores/toast";
 import { backdropUrl, posterUrl } from "@/lib/tmdb";
-import type { SelectionRef, TitleDetails } from "@/types";
+import type {
+  PersonSelection,
+  SelectionRef,
+  TitleDetails,
+} from "@/types";
 
 interface MovieDetailProps {
   selected: SelectionRef | null;
   onClose: () => void;
   onSelectTitle: (ref: SelectionRef) => void;
-  onSelectPerson: (personId: number) => void;
+  onSelectPerson: (person: PersonSelection) => void;
 }
 
 export function MovieDetail({
@@ -108,7 +112,7 @@ function DetailBody({
   details: TitleDetails;
   onBack: () => void;
   onSelectTitle: (ref: SelectionRef) => void;
-  onSelectPerson: (personId: number) => void;
+  onSelectPerson: (person: PersonSelection) => void;
 }) {
   const backdrop = backdropUrl(details.backdropPath, "w1280");
   const heroPoster = posterUrl(details.posterPath, "w342");
@@ -224,7 +228,11 @@ function DetailBody({
         )}
 
         <Section title="Details">
-          <TitleFacts details={details} />
+          <TitleFacts
+            details={details}
+            onSelectPerson={onSelectPerson}
+            onSelectTitle={onSelectTitle}
+          />
         </Section>
 
         <Section title="Actions">

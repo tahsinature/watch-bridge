@@ -1,10 +1,10 @@
 import { User } from "lucide-react";
 import { posterUrl } from "@/lib/tmdb";
-import type { CastMember } from "@/types";
+import type { CastMember, PersonSelection } from "@/types";
 
 interface CastStripProps {
   cast: CastMember[];
-  onSelectPerson: (personId: number) => void;
+  onSelectPerson: (person: PersonSelection) => void;
 }
 
 export function CastStrip({ cast, onSelectPerson }: CastStripProps) {
@@ -17,7 +17,9 @@ export function CastStrip({ cast, onSelectPerson }: CastStripProps) {
         return (
           <button
             key={`${member.id}-${index}`}
-            onClick={() => onSelectPerson(member.id)}
+            onClick={() =>
+              onSelectPerson({ id: member.id, creditMode: "acting" })
+            }
             title={`See what ${member.name} is in`}
             className="group/cast flex w-20 shrink-0 flex-col items-center text-center"
           >

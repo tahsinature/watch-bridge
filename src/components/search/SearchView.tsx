@@ -3,7 +3,6 @@ import { SearchBar } from "./SearchBar";
 import { ExploreHome } from "./ExploreHome";
 import { MinimumVotesSelect } from "./MinimumVotesSelect";
 import { MovieGrid } from "./MovieGrid";
-import { RecentSearches } from "./RecentSearches";
 import { RecentTitles } from "./RecentTitles";
 import { SortSelect } from "./SortSelect";
 import { useSearch } from "@/hooks/useTmdb";
@@ -59,7 +58,7 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         <SearchBar
           value={input}
           onChange={setInput}
@@ -94,7 +93,6 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
         />
       ) : (
         <SearchHome
-          onPick={setInput}
           onSelectResult={openResult}
           onSelectTitle={onSelect}
         />
@@ -105,23 +103,18 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
 
 /** The home screen: what you see before typing anything. */
 function SearchHome({
-  onPick,
   onSelectResult,
   onSelectTitle,
 }: {
-  onPick: (value: string) => void;
   onSelectResult: (result: SearchResult) => void;
   onSelectTitle: (ref: SelectionRef) => void;
 }) {
-  const hasRecentSearches = useRecentSearches((s) => s.queries.length > 0);
   const hasRecentTitles = useRecentTitles((s) => s.titles.length > 0);
-  const hasHistory = hasRecentSearches || hasRecentTitles;
 
   return (
     <div className="flex flex-col gap-10">
-      {hasHistory && (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
-          <RecentSearches onPick={onPick} />
+      {hasRecentTitles && (
+        <div className="w-full">
           <RecentTitles
             onPick={(title) => onSelectTitle(toSelectionRef(title))}
           />

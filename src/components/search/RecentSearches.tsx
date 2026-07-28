@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { History, X } from "lucide-react";
 import { useRecentSearches } from "@/stores/recent";
 
 interface RecentSearchesProps {
@@ -14,39 +14,46 @@ export function RecentSearches({ onPick }: RecentSearchesProps) {
   if (queries.length === 0) return null;
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">Recent</p>
-        <button
-          onClick={clear}
-          className="text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-destructive"
-        >
-          Clear all
-        </button>
-      </div>
+    <div
+      className="flex flex-wrap items-center gap-1.5 border-t border-border px-2.5 py-2"
+      aria-label="Recent searches"
+    >
+      <span className="mr-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <History className="size-3.5" />
+        Recent
+      </span>
 
-      <div className="flex flex-wrap gap-2">
-        {queries.map((query) => (
-          <span
-            key={query}
-            className="group inline-flex items-center border border-border bg-card transition-colors hover:border-primary/50"
+      {queries.map((query) => (
+        <span
+          key={query}
+          className="group inline-flex min-w-0 items-center border border-border bg-card/70 transition-colors hover:border-primary/50"
+        >
+          <button
+            type="button"
+            onClick={() => onPick(query)}
+            title={query}
+            className="max-w-36 truncate py-1 pl-2.5 pr-1.5 text-xs text-muted-foreground transition-colors group-hover:text-foreground sm:max-w-44"
           >
-            <button
-              onClick={() => onPick(query)}
-              className="py-1.5 pl-3 pr-2 text-sm text-muted-foreground transition-colors group-hover:text-foreground"
-            >
-              {query}
-            </button>
-            <button
-              onClick={() => remove(query)}
-              aria-label={`Remove ${query} from recent searches`}
-              className="py-1.5 pr-2 text-muted-foreground/60 transition-colors hover:text-destructive"
-            >
-              <X className="size-3.5" />
-            </button>
-          </span>
-        ))}
-      </div>
+            {query}
+          </button>
+          <button
+            type="button"
+            onClick={() => remove(query)}
+            aria-label={`Remove ${query} from recent searches`}
+            className="py-1 pr-2 text-muted-foreground/50 transition-colors hover:text-destructive"
+          >
+            <X className="size-3" />
+          </button>
+        </span>
+      ))}
+
+      <button
+        type="button"
+        onClick={clear}
+        className="ml-auto px-1.5 py-1 text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-destructive"
+      >
+        Clear
+      </button>
     </div>
   );
 }
