@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { detectBrowserRegion } from "@/lib/browserRegion";
 import type { SortOrder } from "@/types";
 
 /**
@@ -24,7 +25,8 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       tmdbApiKey: "",
-      regions: ["US"],
+      // Persisted settings hydrate over this value, preserving manual choices.
+      regions: [detectBrowserRegion()],
       sortOrder: "votes",
       setTmdbApiKey: (tmdbApiKey) => set({ tmdbApiKey: tmdbApiKey.trim() }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
