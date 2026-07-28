@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { itemKey } from "@/lib/library";
 import type { MediaType } from "@/types";
 
-const MAX_RECENT_TITLES = 8;
+const MAX_RECENT_TITLES = 20;
 
 /** Just enough to render a poster card and reopen the detail view. */
 export interface RecentTitle {

@@ -27,7 +27,7 @@ export function RecentTitles({ onPick }: RecentTitlesProps) {
         </button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] items-start gap-3">
         {titles.map((title) => (
           <RecentTitleCard
             key={itemKey(title.id, title.mediaType)}
@@ -51,7 +51,7 @@ function RecentTitleCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="group relative flex w-20 shrink-0 flex-col">
+    <div className="group relative flex min-w-0 flex-col">
       <button
         onClick={onPick}
         className="relative block aspect-[2/3] w-full overflow-hidden border border-border bg-secondary transition-colors hover:border-primary/50"

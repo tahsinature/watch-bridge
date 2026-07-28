@@ -90,6 +90,15 @@ function SearchHome({
   const hasRecentSearches = useRecentSearches((s) => s.queries.length > 0);
   const hasRecentTitles = useRecentTitles((s) => s.titles.length > 0);
 
+  if (hasRecentSearches || hasRecentTitles) {
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+        <RecentSearches onPick={onPick} />
+        <RecentTitles onPick={(title) => onSelect(toSelectionRef(title))} />
+      </div>
+    );
+  }
+
   return (
     <EmptyState
       icon={Sparkles}
@@ -97,24 +106,17 @@ function SearchHome({
       detail="Search any film or series to see posters, trailers and quick facts."
       className="gap-8 py-14"
     >
-      <RecentSearches onPick={onPick} />
-
-      <RecentTitles onPick={(title) => onSelect(toSelectionRef(title))} />
-
-      {/* Examples are training wheels — retire them once there's history. */}
-      {!hasRecentSearches && !hasRecentTitles && (
-        <div className="flex flex-wrap justify-center gap-2">
-          {EXAMPLES.map((example) => (
-            <button
-              key={example}
-              onClick={() => onPick(example)}
-              className="border border-border bg-card px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-            >
-              {example}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap justify-center gap-2">
+        {EXAMPLES.map((example) => (
+          <button
+            key={example}
+            onClick={() => onPick(example)}
+            className="border border-border bg-card px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+          >
+            {example}
+          </button>
+        ))}
+      </div>
     </EmptyState>
   );
 }
