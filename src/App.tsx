@@ -67,6 +67,7 @@ export default function App() {
         <MovieDetail
           selected={canShowDetails ? selection : null}
           onClose={() => setSelection(null)}
+          onSelectTitle={setSelection}
           onSelectPerson={setPerson}
         />
         <PersonDetail

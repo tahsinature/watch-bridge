@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDetails, getPerson, searchMulti } from "@/lib/tmdb";
+import {
+  getDetails,
+  getPerson,
+  getSimilarTitles,
+  searchMulti,
+} from "@/lib/tmdb";
 import { useSettings } from "@/stores/settings";
 import type { MediaType } from "@/types";
 
@@ -25,6 +30,20 @@ export function useDetails(
     queryKey: ["details", mediaType, id, apiKey],
     queryFn: () => getDetails(apiKey, mediaType!, id!),
     enabled: enabled && apiKey.length > 0 && !!mediaType && !!id,
+  });
+}
+
+export function useSimilarTitles(
+  mediaType: MediaType,
+  id: number,
+  enabled: boolean,
+) {
+  const apiKey = useSettings((s) => s.tmdbApiKey);
+
+  return useQuery({
+    queryKey: ["similar", mediaType, id, apiKey],
+    queryFn: () => getSimilarTitles(apiKey, mediaType, id),
+    enabled: enabled && apiKey.length > 0,
   });
 }
 

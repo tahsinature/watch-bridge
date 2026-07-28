@@ -170,6 +170,7 @@ interface RawDetails {
   created_by?: { name: string }[];
   external_ids?: { imdb_id?: string | null };
   videos?: { results: RawVideo[] };
+  recommendations?: { results?: RawSearchItem[] };
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
   "watch/providers"?: { results?: Record<string, RawCountryProviders> };
   /** Movies: certification lives inside each country's release dates. */
@@ -282,6 +283,18 @@ function normalizeWatchProviders(
   return out;
 }
 
+function normalizeRelatedTitles(
+  results: RawSearchItem[] | undefined,
+  mediaType: MediaType,
+  currentId: number,
+): SearchResult[] {
+  return (results ?? [])
+    .filter((result) => result.id !== currentId)
+    .map((result) =>
+      toSearchResult({ ...result, media_type: mediaType }),
+    );
+}
+
 export async function getDetails(
   apiKey: string,
   mediaType: MediaType,
@@ -293,7 +306,7 @@ export async function getDetails(
 
   const d = await tmdbFetch<RawDetails>(
     buildUrl(`/${mediaType}/${id}`, apiKey, {
-      append_to_response: `videos,external_ids,credits,watch/providers,${certResource}`,
+      append_to_response: `videos,external_ids,credits,watch/providers,recommendations,${certResource}`,
     }),
   );
 
@@ -333,11 +346,27 @@ export async function getDetails(
     directors,
     cast: normalizeCast(d.credits?.cast),
     trailers: normalizeTrailers(d.videos?.results),
+    recommendations: normalizeRelatedTitles(
+      d.recommendations?.results,
+      mediaType,
+      id,
+    ),
     numberOfSeasons: d.number_of_seasons ?? null,
     numberOfEpisodes: d.number_of_episodes ?? null,
     watchProviders: normalizeWatchProviders(d["watch/providers"]?.results),
     certifications: normalizeCertifications(d),
   };
+}
+
+export async function getSimilarTitles(
+  apiKey: string,
+  mediaType: MediaType,
+  id: number,
+): Promise<SearchResult[]> {
+  const data = await tmdbFetch<{ results?: RawSearchItem[] }>(
+    buildUrl(`/${mediaType}/${id}/similar`, apiKey, { page: "1" }),
+  );
+  return normalizeRelatedTitles(data.results, mediaType, id);
 }
 
 // ---- People ---------------------------------------------------------------

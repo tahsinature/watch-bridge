@@ -1,4 +1,11 @@
-import { AlertCircle, Check, Clapperboard, Copy, Tv } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  Clapperboard,
+  Copy,
+  Tv,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +24,7 @@ import { PosterActions } from "./PosterActions";
 import { DetailActionBar } from "./DetailActionBar";
 import { CastStrip } from "./CastStrip";
 import { TrailerGallery } from "./TrailerGallery";
+import { TitleRecommendations } from "./TitleRecommendations";
 import { WhereToWatch } from "./WhereToWatch";
 import { useDetails } from "@/hooks/useTmdb";
 import { useCopiedFlag } from "@/hooks/useCopiedFlag";
@@ -28,12 +36,14 @@ import type { SelectionRef, TitleDetails } from "@/types";
 interface MovieDetailProps {
   selected: SelectionRef | null;
   onClose: () => void;
+  onSelectTitle: (ref: SelectionRef) => void;
   onSelectPerson: (personId: number) => void;
 }
 
 export function MovieDetail({
   selected,
   onClose,
+  onSelectTitle,
   onSelectPerson,
 }: MovieDetailProps) {
   const { data, isLoading, error } = useDetails(
@@ -56,7 +66,14 @@ export function MovieDetail({
         </DialogDescription>
 
         {/* min-h-0 lets this row shrink inside the grid so it can scroll. */}
-        <div className="min-h-0 overflow-y-auto scrollbar-thin">
+        <div
+          key={
+            selected
+              ? `${selected.mediaType}-${selected.id}`
+              : "closed-title"
+          }
+          className="min-h-0 overflow-y-auto scrollbar-thin"
+        >
           {isLoading && <DetailSkeleton />}
           {error && (
             <EmptyState
@@ -66,7 +83,14 @@ export function MovieDetail({
               detail={(error as Error).message}
             />
           )}
-          {data && <DetailBody details={data} onSelectPerson={onSelectPerson} />}
+          {data && (
+            <DetailBody
+              details={data}
+              onBack={onClose}
+              onSelectTitle={onSelectTitle}
+              onSelectPerson={onSelectPerson}
+            />
+          )}
         </div>
 
         {data && <DetailActionBar details={data} onClose={onClose} />}
@@ -77,9 +101,13 @@ export function MovieDetail({
 
 function DetailBody({
   details,
+  onBack,
+  onSelectTitle,
   onSelectPerson,
 }: {
   details: TitleDetails;
+  onBack: () => void;
+  onSelectTitle: (ref: SelectionRef) => void;
   onSelectPerson: (personId: number) => void;
 }) {
   const backdrop = backdropUrl(details.backdropPath, "w1280");
@@ -101,6 +129,15 @@ function DetailBody({
     <div className="pb-6">
       {/* Hero — backdrop runs full bleed, everything else stays in a column. */}
       <div className="relative">
+        <button
+          type="button"
+          onClick={onBack}
+          className="absolute left-4 top-4 z-10 inline-flex h-8 items-center gap-1.5 border border-white/20 bg-black/65 px-2.5 text-xs text-white/85 backdrop-blur-sm transition-colors hover:border-white/40 hover:bg-black/80 hover:text-white"
+        >
+          <ArrowLeft className="size-3.5" />
+          Back
+        </button>
+
         <div className="h-40 w-full overflow-hidden sm:h-52 lg:h-64">
           {backdrop ? (
             <img src={backdrop} alt="" className="h-full w-full object-cover" />
@@ -201,6 +238,11 @@ function DetailBody({
         <Section title="Trailers">
           <TrailerGallery trailers={details.trailers} />
         </Section>
+
+        <TitleRecommendations
+          details={details}
+          onSelect={onSelectTitle}
+        />
       </div>
 
     </div>

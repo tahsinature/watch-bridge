@@ -164,6 +164,8 @@ export interface TitleDetails {
   directors: string[];
   cast: CastMember[];
   trailers: Trailer[];
+  /** TMDB recommendations returned alongside the title details. */
+  recommendations: SearchResult[];
   numberOfSeasons: number | null;
   numberOfEpisodes: number | null;
   /** Watch availability keyed by ISO 3166-1 country code (e.g. "US"). */
