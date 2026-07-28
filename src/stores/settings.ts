@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { detectBrowserRegion } from "@/lib/browserRegion";
-import type { SortOrder } from "@/types";
+import {
+  DEFAULT_MINIMUM_VOTES,
+  isMinimumVotes,
+} from "@/lib/voteFilter";
+import type { MinimumVotes, SortOrder } from "@/types";
 
 /**
  * User preferences persisted to localStorage. Kept intentionally small — the
@@ -14,8 +18,11 @@ export interface SettingsState {
   regions: string[];
   /** How search results are ordered. */
   sortOrder: SortOrder;
+  /** Hide search and discovery results below this TMDB vote count. */
+  minimumVotes: MinimumVotes;
   setTmdbApiKey: (key: string) => void;
   setSortOrder: (order: SortOrder) => void;
+  setMinimumVotes: (minimumVotes: MinimumVotes) => void;
   setRegions: (regions: string[]) => void;
   /** Add the country if absent, remove it if present. */
   toggleRegion: (code: string) => void;
@@ -28,8 +35,10 @@ export const useSettings = create<SettingsState>()(
       // Persisted settings hydrate over this value, preserving manual choices.
       regions: [detectBrowserRegion()],
       sortOrder: "votes",
+      minimumVotes: DEFAULT_MINIMUM_VOTES,
       setTmdbApiKey: (tmdbApiKey) => set({ tmdbApiKey: tmdbApiKey.trim() }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
+      setMinimumVotes: (minimumVotes) => set({ minimumVotes }),
       setRegions: (regions) => set({ regions }),
       toggleRegion: (code) =>
         set((s) => ({
@@ -40,7 +49,7 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "watchbridge.settings",
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
         if (typeof persisted !== "object" || persisted === null) {
           return persisted as SettingsState;
@@ -49,6 +58,9 @@ export const useSettings = create<SettingsState>()(
         delete settings.notionUrl;
         delete settings.maxContentLevel;
         delete settings.includeAdult;
+        if (!isMinimumVotes(settings.minimumVotes)) {
+          settings.minimumVotes = DEFAULT_MINIMUM_VOTES;
+        }
         return settings as unknown as SettingsState;
       },
     },

@@ -9,6 +9,8 @@ interface MovieGridProps {
   loading: boolean;
   error: Error | null;
   query: string;
+  emptyTitle?: string;
+  emptyDetail?: string;
   onSelect: (result: SearchResult) => void;
 }
 
@@ -20,6 +22,8 @@ export function MovieGrid({
   loading,
   error,
   query,
+  emptyTitle,
+  emptyDetail,
   onSelect,
 }: MovieGridProps) {
   if (loading) {
@@ -47,12 +51,12 @@ export function MovieGrid({
     );
   }
 
-  if (query.trim().length > 1 && results.length === 0) {
+  if ((emptyTitle || query.trim().length > 1) && results.length === 0) {
     return (
       <EmptyState
         icon={SearchX}
-        title={`No results for "${query}"`}
-        detail="Try a different spelling or a shorter title."
+        title={emptyTitle ?? `No results for "${query}"`}
+        detail={emptyDetail ?? "Try a different spelling or a shorter title."}
       />
     );
   }

@@ -82,8 +82,17 @@ export interface SearchResult {
   adult: boolean;
 }
 
+/** Official TMDB genre entry for either movies or TV. */
+export interface Genre {
+  id: number;
+  name: string;
+}
+
 /** How search results are ordered. TMDB has no sort param for text search. */
 export type SortOrder = "relevance" | "votes" | "rating" | "newest" | "oldest";
+
+/** Persisted lower bound used to hide titles with very little audience data. */
+export type MinimumVotes = 0 | 100 | 500 | 1_000 | 5_000;
 
 export interface Trailer {
   id: string;

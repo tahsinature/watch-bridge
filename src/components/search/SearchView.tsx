@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles } from "lucide-react";
 import { SearchBar } from "./SearchBar";
+import { ExploreHome } from "./ExploreHome";
+import { MinimumVotesSelect } from "./MinimumVotesSelect";
 import { MovieGrid } from "./MovieGrid";
 import { RecentSearches } from "./RecentSearches";
 import { RecentTitles } from "./RecentTitles";
 import { SortSelect } from "./SortSelect";
-import { EmptyState } from "@/components/ui/empty-state";
 import { useSearch } from "@/hooks/useTmdb";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toSelectionRef } from "@/lib/library";
 import { sortResults } from "@/lib/sort";
+import {
+  filterByMinimumVotes,
+  minimumVotesLabel,
+} from "@/lib/voteFilter";
 import { useRecentSearches } from "@/stores/recent";
 import { useRecentTitles } from "@/stores/recentTitles";
 import { useSettings } from "@/stores/settings";
 import type { SearchResult, SelectionRef } from "@/types";
-
-const EXAMPLES = ["Dune", "Breaking Bad", "Oppenheimer", "The Bear", "Interstellar"];
 
 export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void }) {
   const [input, setInput] = useState("");
@@ -25,10 +27,17 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
   const hasQuery = query.trim().length > 1;
 
   const sortOrder = useSettings((s) => s.sortOrder);
+  const minimumVotes = useSettings((s) => s.minimumVotes);
   const results = useMemo(
-    () => sortResults(data ?? [], sortOrder),
-    [data, sortOrder],
+    () =>
+      sortResults(
+        filterByMinimumVotes(data ?? [], minimumVotes),
+        sortOrder,
+      ),
+    [data, minimumVotes, sortOrder],
   );
+  const filteredEverything =
+    minimumVotes > 0 && (data?.length ?? 0) > 0 && results.length === 0;
 
   // Only remember searches that actually found something.
   const record = useRecentSearches((s) => s.record);
@@ -58,9 +67,10 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
         />
       </div>
 
-      {hasQuery && results.length > 0 && (
-        <div className="flex flex-wrap justify-end gap-3">
-          <SortSelect />
+      {hasQuery && (
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <MinimumVotesSelect />
+          {(data?.length ?? 0) > 0 && <SortSelect />}
         </div>
       )}
 
@@ -70,10 +80,24 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
           loading={isLoading}
           error={(error as Error) ?? null}
           query={query}
+          emptyTitle={
+            filteredEverything
+              ? `No titles with ${minimumVotesLabel(minimumVotes)} votes`
+              : undefined
+          }
+          emptyDetail={
+            filteredEverything
+              ? "Lower the minimum vote count to include newer or niche titles."
+              : undefined
+          }
           onSelect={openResult}
         />
       ) : (
-        <SearchHome onPick={setInput} onSelect={onSelect} />
+        <SearchHome
+          onPick={setInput}
+          onSelectResult={openResult}
+          onSelectTitle={onSelect}
+        />
       )}
     </div>
   );
@@ -82,41 +106,29 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
 /** The home screen: what you see before typing anything. */
 function SearchHome({
   onPick,
-  onSelect,
+  onSelectResult,
+  onSelectTitle,
 }: {
   onPick: (value: string) => void;
-  onSelect: (ref: SelectionRef) => void;
+  onSelectResult: (result: SearchResult) => void;
+  onSelectTitle: (ref: SelectionRef) => void;
 }) {
   const hasRecentSearches = useRecentSearches((s) => s.queries.length > 0);
   const hasRecentTitles = useRecentTitles((s) => s.titles.length > 0);
-
-  if (hasRecentSearches || hasRecentTitles) {
-    return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
-        <RecentSearches onPick={onPick} />
-        <RecentTitles onPick={(title) => onSelect(toSelectionRef(title))} />
-      </div>
-    );
-  }
+  const hasHistory = hasRecentSearches || hasRecentTitles;
 
   return (
-    <EmptyState
-      icon={Sparkles}
-      title="Start typing to explore"
-      detail="Search any film or series to see posters, trailers and quick facts."
-      className="gap-8 py-14"
-    >
-      <div className="flex flex-wrap justify-center gap-2">
-        {EXAMPLES.map((example) => (
-          <button
-            key={example}
-            onClick={() => onPick(example)}
-            className="border border-border bg-card px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-          >
-            {example}
-          </button>
-        ))}
-      </div>
-    </EmptyState>
+    <div className="flex flex-col gap-10">
+      {hasHistory && (
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+          <RecentSearches onPick={onPick} />
+          <RecentTitles
+            onPick={(title) => onSelectTitle(toSelectionRef(title))}
+          />
+        </div>
+      )}
+
+      <ExploreHome onSelect={onSelectResult} />
+    </div>
   );
 }

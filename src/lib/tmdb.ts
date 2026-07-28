@@ -2,6 +2,7 @@ import { itemKey } from "@/lib/library";
 import type {
   CastMember,
   CountryProviders,
+  Genre,
   MediaType,
   PersonDetails,
   SearchResult,
@@ -91,7 +92,7 @@ function yearOf(date?: string): string {
 
 interface RawSearchItem {
   id: number;
-  media_type: string;
+  media_type?: string;
   title?: string;
   name?: string;
   release_date?: string;
@@ -104,10 +105,13 @@ interface RawSearchItem {
   adult?: boolean;
 }
 
-function toSearchResult(r: RawSearchItem): SearchResult {
+function toSearchResult(
+  r: RawSearchItem,
+  mediaType = r.media_type as MediaType,
+): SearchResult {
   return {
     id: r.id,
-    mediaType: r.media_type as MediaType,
+    mediaType,
     title: r.title ?? r.name ?? "Untitled",
     year: yearOf(r.release_date ?? r.first_air_date),
     releaseDate: r.release_date ?? r.first_air_date ?? "",
@@ -135,7 +139,52 @@ export async function searchMulti(
     }),
   );
 
-  return data.results.filter(isTitle).map(toSearchResult);
+  return data.results
+    .filter(isTitle)
+    .map((result) => toSearchResult(result));
+}
+
+// ---- Discovery ------------------------------------------------------------
+
+export async function getTrendingTitles(
+  apiKey: string,
+): Promise<SearchResult[]> {
+  const data = await tmdbFetch<{ results?: RawSearchItem[] }>(
+    buildUrl("/trending/all/week", apiKey),
+  );
+  return (data.results ?? [])
+    .filter(isTitle)
+    .map((result) => toSearchResult(result));
+}
+
+export async function getGenres(
+  apiKey: string,
+  mediaType: MediaType,
+): Promise<Genre[]> {
+  const data = await tmdbFetch<{ genres?: Genre[] }>(
+    buildUrl(`/genre/${mediaType}/list`, apiKey),
+  );
+  return data.genres ?? [];
+}
+
+export async function discoverByGenre(
+  apiKey: string,
+  mediaType: MediaType,
+  genreId: number,
+  minimumVotes: number,
+): Promise<SearchResult[]> {
+  const data = await tmdbFetch<{ results?: RawSearchItem[] }>(
+    buildUrl(`/discover/${mediaType}`, apiKey, {
+      with_genres: String(genreId),
+      sort_by: "popularity.desc",
+      include_adult: "true",
+      "vote_count.gte": String(minimumVotes),
+      page: "1",
+    }),
+  );
+  return (data.results ?? []).map((result) =>
+    toSearchResult(result, mediaType),
+  );
 }
 
 // ---- Details --------------------------------------------------------------
@@ -290,9 +339,7 @@ function normalizeRelatedTitles(
 ): SearchResult[] {
   return (results ?? [])
     .filter((result) => result.id !== currentId)
-    .map((result) =>
-      toSearchResult({ ...result, media_type: mediaType }),
-    );
+    .map((result) => toSearchResult(result, mediaType));
 }
 
 export async function getDetails(
