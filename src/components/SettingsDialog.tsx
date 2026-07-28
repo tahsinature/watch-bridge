@@ -1,5 +1,7 @@
 import { useState } from "react";
 import {
+  ClipboardCopy,
+  ClipboardPaste,
   DatabaseBackup,
   Download,
   ExternalLink,
@@ -17,9 +19,9 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { IconAction } from "@/components/ui/icon-action";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { JsonExportDialog } from "@/components/ui/json-export-dialog";
 import { JsonImportDialog } from "@/components/ui/json-import-dialog";
 import { ActionsSettings } from "@/components/actions/ActionsSettings";
@@ -36,7 +38,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
@@ -133,7 +135,6 @@ function ApiKeySection() {
 }
 
 function BackupSection() {
-  const [includeApiKey, setIncludeApiKey] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -151,6 +152,43 @@ function BackupSection() {
     }
   };
 
+  const handleQuickCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        JSON.stringify(buildBackup(), null, 2),
+      );
+      toast("Backup copied to clipboard", "success");
+    } catch {
+      toast("Clipboard access was blocked", "error");
+    }
+  };
+
+  const handleQuickRestore = async () => {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      toast("Clipboard access was blocked", "error");
+      return;
+    }
+
+    if (!text.trim()) {
+      toast("Clipboard is empty", "error");
+      return;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      toast("Clipboard doesn't contain valid JSON", "error");
+      return;
+    }
+
+    const error = handleRestore(parsed);
+    if (error) toast(error, "error");
+  };
+
   return (
     <div className="space-y-3 border-t border-border pt-5">
       <div className="flex items-center gap-2">
@@ -159,18 +197,39 @@ function BackupSection() {
       </div>
       <p className="text-xs text-muted-foreground">
         Everything lives in this browser only. Export to move your library,
-        actions and preferences to another browser or device.
+        actions and preferences to another browser or device. Backups include
+        your TMDB API key, so treat them as a secret.
       </p>
 
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-          <Upload className="h-4 w-4" />
-          Import
-        </Button>
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <IconAction
+            label="Copy backup to clipboard"
+            variant="outline"
+            onClick={() => void handleQuickCopy()}
+          >
+            <ClipboardCopy />
+          </IconAction>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
+          <IconAction
+            label="Restore backup from clipboard now"
+            variant="outline"
+            destructive
+            onClick={() => void handleQuickRestore()}
+          >
+            <ClipboardPaste />
+          </IconAction>
+        </div>
       </div>
 
       <JsonExportDialog
@@ -179,19 +238,8 @@ function BackupSection() {
         title="Export everything"
         description="Copy the JSON or save it as a file — both carry the same data."
         filename={`watchbridge-backup-${todayStamp()}.json`}
-        data={buildBackup(includeApiKey)}
-      >
-        <label className="flex items-center justify-between gap-4 border border-border p-3">
-          <span className="text-sm">
-            Include TMDB API key
-            <span className="block text-xs text-muted-foreground">
-              Off keeps this safe to paste or store anywhere. On makes
-              restoring a single step — then treat it as a secret.
-            </span>
-          </span>
-          <Switch checked={includeApiKey} onCheckedChange={setIncludeApiKey} />
-        </label>
-      </JsonExportDialog>
+        data={buildBackup()}
+      />
 
       <JsonImportDialog
         open={importOpen}

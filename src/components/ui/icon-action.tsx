@@ -10,7 +10,7 @@ interface IconActionProps {
   /** Serves as both the tooltip and the accessible name. */
   label: string;
   onClick: () => void;
-  variant?: "secondary" | "ghost";
+  variant?: "secondary" | "outline" | "ghost";
   destructive?: boolean;
   children: React.ReactNode;
 }

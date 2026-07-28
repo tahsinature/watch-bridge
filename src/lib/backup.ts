@@ -28,7 +28,7 @@ export interface BackupFile {
   };
 }
 
-export function buildBackup(includeApiKey: boolean): BackupFile {
+export function buildBackup(): BackupFile {
   const { tmdbApiKey, regions, sortOrder } = useSettings.getState();
 
   return {
@@ -37,7 +37,7 @@ export function buildBackup(includeApiKey: boolean): BackupFile {
     exportedAt: new Date().toISOString(),
     data: {
       settings: {
-        ...(includeApiKey ? { tmdbApiKey } : {}),
+        tmdbApiKey,
         regions,
         sortOrder,
       },
