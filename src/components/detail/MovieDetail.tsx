@@ -19,7 +19,7 @@ import { TrailerGallery } from "./TrailerGallery";
 import { WhereToWatch } from "./WhereToWatch";
 import { useDetails } from "@/hooks/useTmdb";
 import { useCopiedFlag } from "@/hooks/useCopiedFlag";
-import { useSyncLibraryRating } from "@/stores/library";
+import { useSyncLibraryMetadata } from "@/stores/library";
 import { toast } from "@/stores/toast";
 import { backdropUrl, posterUrl } from "@/lib/tmdb";
 import type { SelectionRef, TitleDetails } from "@/types";
@@ -86,8 +86,8 @@ function DetailBody({
 
   const [titleCopied, flagTitleCopied] = useCopiedFlag();
 
-  // Opening a saved title is the natural moment to refresh its stored rating.
-  useSyncLibraryRating(details);
+  // Opening a saved title is the natural moment to refresh its stored metadata.
+  useSyncLibraryMetadata(details);
 
   const copyTitle = async () => {
     const year = details.year ? ` (${details.year})` : "";

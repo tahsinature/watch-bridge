@@ -68,15 +68,19 @@ export const useLibrary = create<LibraryState>()(
     }),
     {
       name: "watchbridge.library",
-      version: 1,
+      version: 2,
 
-      /** v1 added voteCount; entries saved before it have none. */
+      /** Heal fields added after an entry was saved. */
       migrate: (persisted) => {
         const state = persisted as LibraryState;
         const items = Array.isArray(state?.items) ? state.items : [];
         return {
           ...state,
-          items: items.map((i) => ({ ...i, voteCount: i.voteCount ?? 0 })),
+          items: items.map((i) => ({
+            ...i,
+            voteCount: i.voteCount ?? 0,
+            adult: typeof i.adult === "boolean" ? i.adult : false,
+          })),
         };
       },
     },
@@ -84,11 +88,9 @@ export const useLibrary = create<LibraryState>()(
 );
 
 /**
- * Refresh a saved title's TMDB rating whenever its details load. Ratings drift
- * over time, and entries saved before voteCount existed carry a placeholder 0
- * until something fills it in.
+ * Refresh mutable TMDB metadata whenever a saved title's details load.
  */
-export function useSyncLibraryRating(details: TitleDetails): void {
+export function useSyncLibraryMetadata(details: TitleDetails): void {
   const update = useLibrary((s) => s.update);
   const stored = useLibrary((s) =>
     s.items.find((i) => sameTitle(i, details)),
@@ -96,13 +98,15 @@ export function useSyncLibraryRating(details: TitleDetails): void {
   const isStale =
     stored !== undefined &&
     (stored.voteCount !== details.voteCount ||
-      stored.voteAverage !== details.voteAverage);
+      stored.voteAverage !== details.voteAverage ||
+      stored.adult !== details.adult);
 
   useEffect(() => {
     if (!isStale) return;
     update(details.id, details.mediaType, {
       voteAverage: details.voteAverage,
       voteCount: details.voteCount,
+      adult: details.adult,
     });
   }, [isStale, details, update]);
 }

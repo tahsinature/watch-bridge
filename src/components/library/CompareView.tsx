@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { AdultBadge } from "@/components/ui/adult-badge";
 import { PosterImage } from "@/components/ui/poster-image";
 import { RatingBadge } from "@/components/ui/rating-badge";
 import { StarRating } from "@/components/ui/star-rating";
@@ -71,6 +72,7 @@ function CompareColumn({
   // there too — a stored average beside a fresh count could disagree.
   const voteAverage = data?.voteAverage ?? item.voteAverage;
   const voteCount = data?.voteCount ?? 0;
+  const adult = data?.adult ?? item.adult;
 
   return (
     <div className="relative flex w-56 shrink-0 flex-col rounded-xl border border-border bg-secondary/20">
@@ -101,6 +103,7 @@ function CompareColumn({
 
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <RatingBadge average={voteAverage} votes={voteCount} />
+          <AdultBadge adult={adult} />
           {runtime && (
             <span className="inline-flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />

@@ -1,22 +1,5 @@
 export type MediaType = "movie" | "tv";
 
-/**
- * Personal nudity/sexual-content scale. TMDB has no such data, so this is
- * always user-supplied — see IMDb's Parents Guide "Sex & Nudity" severity.
- */
-export type ContentLevel = 0 | 1 | 2 | 3;
-
-export const CONTENT_LEVELS: {
-  value: ContentLevel;
-  label: string;
-  hint: string;
-}[] = [
-  { value: 0, label: "0 – No", hint: "Nothing" },
-  { value: 1, label: "1 – Kissing & Related", hint: "Kissing and similar" },
-  { value: 2, label: "2 – Very", hint: "Sexual activity, no full exposure" },
-  { value: 3, label: "3 – Open", hint: "Nudity or topless" },
-];
-
 /** The three top-level tabs. Mirrored in the URL as `?view=`. */
 export type View = "search" | "shortlist" | "watched";
 
@@ -41,6 +24,8 @@ export interface LibraryItem {
   backdropPath: string | null;
   voteAverage: number;
   voteCount: number;
+  /** TMDB's broad adult-title classification; not a nudity assessment. */
+  adult: boolean;
   overview: string;
   imdbId: string | null;
   genres: string[];
@@ -93,6 +78,8 @@ export interface SearchResult {
   backdropPath: string | null;
   voteAverage: number;
   voteCount: number;
+  /** TMDB's broad adult-title classification; not a nudity assessment. */
+  adult: boolean;
 }
 
 /** How search results are ordered. TMDB has no sort param for text search. */
@@ -160,6 +147,8 @@ export interface TitleDetails {
   backdropPath: string | null;
   voteAverage: number;
   voteCount: number;
+  /** TMDB's broad adult-title classification; not a nudity assessment. */
+  adult: boolean;
   runtime: number | null;
   genres: string[];
   spokenLanguages: string[];

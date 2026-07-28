@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
 import { Check, Eye, Trash2 } from "lucide-react";
+import { AdultBadge } from "@/components/ui/adult-badge";
 import { PosterImage } from "@/components/ui/poster-image";
 import { RatingBadge } from "@/components/ui/rating-badge";
-import { ContentLevelBadge } from "./ContentLevelBadge";
-import { useContentLimit } from "@/hooks/useContentLimit";
 import { cn } from "@/lib/utils";
 import type { LibraryItem } from "@/types";
 
@@ -24,19 +23,15 @@ export function ShortlistCard({
   onWatched,
   onRemove,
 }: ShortlistCardProps) {
-  const { tooltip, dimClass } = useContentLimit(item.id, item.mediaType);
-
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
-      title={tooltip}
       className={cn(
         "group relative flex flex-col overflow-hidden border bg-card shadow-md transition-colors",
         selected ? "border-primary ring-1 ring-primary" : "border-border",
-        dimClass,
       )}
     >
       <button
@@ -56,7 +51,7 @@ export function ShortlistCard({
         />
         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/70 to-transparent" />
         <span className="absolute bottom-2 right-2">
-          <ContentLevelBadge id={item.id} mediaType={item.mediaType} />
+          <AdultBadge adult={item.adult} />
         </span>
       </button>
 

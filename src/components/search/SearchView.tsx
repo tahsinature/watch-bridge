@@ -5,7 +5,6 @@ import { MovieGrid } from "./MovieGrid";
 import { RecentSearches } from "./RecentSearches";
 import { RecentTitles } from "./RecentTitles";
 import { SortSelect } from "./SortSelect";
-import { ContentLevelFilter } from "@/components/library/ContentLevelFilter";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSearch } from "@/hooks/useTmdb";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -62,7 +61,6 @@ export function SearchView({ onSelect }: { onSelect: (ref: SelectionRef) => void
       {hasQuery && results.length > 0 && (
         <div className="flex flex-wrap justify-end gap-3">
           <SortSelect />
-          <ContentLevelFilter />
         </div>
       )}
 

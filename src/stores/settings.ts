@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ContentLevel, SortOrder } from "@/types";
+import type { SortOrder } from "@/types";
 
 /**
  * User preferences persisted to localStorage. Kept intentionally small — the
@@ -11,8 +11,6 @@ export interface SettingsState {
   tmdbApiKey: string;
   /** ISO 3166-1 country codes selected for "Where to watch" comparison. */
   regions: string[];
-  /** Highest acceptable content level; null disables the filter. */
-  maxContentLevel: ContentLevel | null;
   /** How search results are ordered. */
   sortOrder: SortOrder;
   setTmdbApiKey: (key: string) => void;
@@ -20,7 +18,6 @@ export interface SettingsState {
   setRegions: (regions: string[]) => void;
   /** Add the country if absent, remove it if present. */
   toggleRegion: (code: string) => void;
-  setMaxContentLevel: (level: ContentLevel | null) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -28,11 +25,9 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       tmdbApiKey: "",
       regions: ["US"],
-      maxContentLevel: null,
       sortOrder: "votes",
       setTmdbApiKey: (tmdbApiKey) => set({ tmdbApiKey: tmdbApiKey.trim() }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
-      setMaxContentLevel: (maxContentLevel) => set({ maxContentLevel }),
       setRegions: (regions) => set({ regions }),
       toggleRegion: (code) =>
         set((s) => ({
@@ -43,13 +38,15 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "watchbridge.settings",
-      version: 1,
+      version: 2,
       migrate: (persisted) => {
         if (typeof persisted !== "object" || persisted === null) {
           return persisted as SettingsState;
         }
         const settings = { ...(persisted as Record<string, unknown>) };
         delete settings.notionUrl;
+        delete settings.maxContentLevel;
+        delete settings.includeAdult;
         return settings as unknown as SettingsState;
       },
     },

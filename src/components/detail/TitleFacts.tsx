@@ -1,10 +1,16 @@
+import { ExternalLink, Shield } from "lucide-react";
+import { AdultBadge } from "@/components/ui/adult-badge";
 import { Badge } from "@/components/ui/badge";
 import { RatingBadge } from "@/components/ui/rating-badge";
 import { CopyTextButton } from "@/components/ui/copy-text-button";
 import { LabeledBlock, LabeledRow } from "./LabeledRow";
-import { ContentLevelPicker } from "./ContentLevelPicker";
 import { useSettings } from "@/stores/settings";
-import { formatRating, formatReleaseSpan, formatRuntime } from "@/lib/format";
+import {
+  formatRating,
+  formatReleaseSpan,
+  formatRuntime,
+} from "@/lib/format";
+import { parentsGuideUrl } from "@/lib/parentsGuide";
 import type { TitleDetails } from "@/types";
 
 /** Key facts as labeled rows — scannable and comparable across titles. */
@@ -76,17 +82,36 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
       )}
 
       {certification && (
-        <LabeledRow label="Cert">
-          <span className="flex items-center gap-2 text-sm">
-            <Badge variant="outline">{certification}</Badge>
+        <LabeledRow label="Age rating">
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+            <Badge variant="gold">
+              <Shield aria-hidden="true" />
+              {certification}
+            </Badge>
             <span className="text-muted-foreground">{certCountry}</span>
+            {details.imdbId && (
+              <span className="inline-flex items-center gap-3">
+                <span
+                  className="h-4 w-px bg-border"
+                  aria-hidden="true"
+                />
+                <ParentsGuideLink imdbId={details.imdbId} />
+              </span>
+            )}
           </span>
         </LabeledRow>
       )}
 
-      <LabeledRow label="Nudity">
-        <ContentLevelPicker details={details} />
-      </LabeledRow>
+      {(details.adult || (!certification && details.imdbId)) && (
+        <LabeledRow label="Content">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+            <AdultBadge adult={details.adult} />
+            {!certification && details.imdbId && (
+              <ParentsGuideLink imdbId={details.imdbId} />
+            )}
+          </div>
+        </LabeledRow>
+      )}
 
       {details.directors.length > 0 && (
         <LabeledRow label={creditLabel}>
@@ -109,6 +134,20 @@ export function TitleFacts({ details }: { details: TitleDetails }) {
         </LabeledRow>
       )}
     </LabeledBlock>
+  );
+}
+
+function ParentsGuideLink({ imdbId }: { imdbId: string }) {
+  return (
+    <a
+      href={parentsGuideUrl(imdbId)}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80 hover:underline"
+    >
+      Check IMDb Parents Guide
+      <ExternalLink className="h-3 w-3" />
+    </a>
   );
 }
 

@@ -1,12 +1,10 @@
 import { motion } from "framer-motion";
 import { Clapperboard, Tv } from "lucide-react";
+import { AdultBadge } from "@/components/ui/adult-badge";
 import { PosterImage } from "@/components/ui/poster-image";
 import { RatingBadge } from "@/components/ui/rating-badge";
 import { ShortlistButton } from "@/components/library/ShortlistButton";
-import { ContentLevelBadge } from "@/components/library/ContentLevelBadge";
-import { useContentLimit } from "@/hooks/useContentLimit";
 import { fromSearchResult } from "@/lib/library";
-import { cn } from "@/lib/utils";
 import type { SearchResult } from "@/types";
 
 interface MovieCardProps {
@@ -15,18 +13,12 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ result, onSelect }: MovieCardProps) {
-  const { tooltip, dimClass } = useContentLimit(result.id, result.mediaType);
-
   return (
     <motion.div
       layout
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      title={tooltip}
-      className={cn(
-        "group relative flex flex-col overflow-hidden border border-border bg-card shadow-md transition-colors hover:border-primary/50",
-        dimClass,
-      )}
+      className="group relative flex flex-col overflow-hidden border border-border bg-card shadow-md transition-colors hover:border-primary/50"
     >
       <button
         onClick={() => onSelect(result)}
@@ -56,7 +48,7 @@ export function MovieCard({ result, onSelect }: MovieCardProps) {
             variant="overlay"
           />
           <span className="ml-auto">
-            <ContentLevelBadge id={result.id} mediaType={result.mediaType} />
+            <AdultBadge adult={result.adult} />
           </span>
         </span>
       </button>

@@ -4,7 +4,6 @@ import { GitCompareArrows, ListPlus } from "lucide-react";
 import { ShortlistCard } from "./ShortlistCard";
 import { CompareView } from "./CompareView";
 import { WatchedDialog } from "./WatchedDialog";
-import { ContentLevelFilter } from "./ContentLevelFilter";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useLibrary } from "@/stores/library";
@@ -60,7 +59,6 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* Wraps rather than overflowing — three controls don't fit a phone row. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">
           Shortlist
@@ -68,18 +66,15 @@ export function ShortlistView({ onSelect }: { onSelect: (ref: SelectionRef) => v
             {shortlist.length}
           </span>
         </h2>
-        <div className="flex min-w-0 items-center gap-3">
-          <ContentLevelFilter />
-          <Button
-            size="sm"
-            className="shrink-0"
-            disabled={selected.size < 2}
-            onClick={() => setCompareOpen(true)}
-          >
-            <GitCompareArrows className="size-4" />
-            Compare{selected.size > 0 ? ` (${selected.size})` : ""}
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          className="shrink-0"
+          disabled={selected.size < 2}
+          onClick={() => setCompareOpen(true)}
+        >
+          <GitCompareArrows className="size-4" />
+          Compare{selected.size > 0 ? ` (${selected.size})` : ""}
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

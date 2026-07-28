@@ -101,6 +101,7 @@ interface RawSearchItem {
   backdrop_path?: string | null;
   vote_average?: number;
   vote_count?: number;
+  adult?: boolean;
 }
 
 function toSearchResult(r: RawSearchItem): SearchResult {
@@ -115,6 +116,7 @@ function toSearchResult(r: RawSearchItem): SearchResult {
     backdropPath: r.backdrop_path ?? null,
     voteAverage: r.vote_average ?? 0,
     voteCount: r.vote_count ?? 0,
+    adult: r.adult ?? false,
   };
 }
 
@@ -128,7 +130,7 @@ export async function searchMulti(
   const data = await tmdbFetch<{ results: RawSearchItem[] }>(
     buildUrl("/search/multi", apiKey, {
       query,
-      include_adult: "false",
+      include_adult: "true",
       page: "1",
     }),
   );
@@ -150,6 +152,7 @@ interface RawDetails {
   backdrop_path?: string | null;
   vote_average?: number;
   vote_count?: number;
+  adult?: boolean;
   status?: string;
   homepage?: string | null;
   original_language?: string;
@@ -314,6 +317,7 @@ export async function getDetails(
     backdropPath: d.backdrop_path ?? null,
     voteAverage: d.vote_average ?? 0,
     voteCount: d.vote_count ?? 0,
+    adult: d.adult ?? false,
     runtime:
       mediaType === "movie"
         ? (d.runtime ?? null)

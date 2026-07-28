@@ -1,13 +1,12 @@
 import { useActions } from "@/stores/actions";
-import { useContentLevels } from "@/stores/content";
 import { useLibrary } from "@/stores/library";
 import { useRecentSearches } from "@/stores/recent";
 import { useRecentTitles, type RecentTitle } from "@/stores/recentTitles";
 import { useSettings, type SettingsState } from "@/stores/settings";
-import type { ActionDef, ContentLevel, LibraryItem } from "@/types";
+import type { ActionDef, LibraryItem } from "@/types";
 
 const APP_TAG = "watchbridge";
-const BACKUP_VERSION = 1;
+const BACKUP_VERSION = 2;
 
 /**
  * Everything the app keeps, in one file. Versioned so a future format change
@@ -21,15 +20,13 @@ export interface BackupFile {
     settings?: Record<string, unknown>;
     actions?: unknown[];
     library?: unknown[];
-    content?: Record<string, unknown>;
     recent?: unknown[];
     recentTitles?: unknown[];
   };
 }
 
 export function buildBackup(includeApiKey: boolean): BackupFile {
-  const { tmdbApiKey, regions, maxContentLevel, sortOrder } =
-    useSettings.getState();
+  const { tmdbApiKey, regions, sortOrder } = useSettings.getState();
 
   return {
     app: APP_TAG,
@@ -37,15 +34,12 @@ export function buildBackup(includeApiKey: boolean): BackupFile {
     exportedAt: new Date().toISOString(),
     data: {
       settings: {
-        // Opt-in: without this the file is plain data and safe to store anywhere.
         ...(includeApiKey ? { tmdbApiKey } : {}),
         regions,
-        maxContentLevel,
         sortOrder,
       },
       actions: useActions.getState().actions,
       library: useLibrary.getState().items,
-      content: useContentLevels.getState().levels,
       recent: useRecentSearches.getState().queries,
       recentTitles: useRecentTitles.getState().titles,
     },
@@ -54,7 +48,7 @@ export function buildBackup(includeApiKey: boolean): BackupFile {
 
 // ---- Validation -----------------------------------------------------------
 // Hand-written rather than schema-driven: the shapes are small, and a restore
-// that silently accepts junk would corrupt six stores at once.
+// that silently accepts junk would corrupt several stores at once.
 
 type Obj = Record<string, unknown>;
 
@@ -62,9 +56,6 @@ const isObject = (v: unknown): v is Obj =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
 const isMediaType = (v: unknown) => v === "movie" || v === "tv";
-
-const isContentLevel = (v: unknown): v is ContentLevel =>
-  v === 0 || v === 1 || v === 2 || v === 3;
 
 const ACTION_TYPES = ["open-url", "copy", "deep-link", "http-request"];
 const ACTION_GROUPS = ["download", "search", "record", "custom"];
@@ -105,6 +96,7 @@ function healLibraryItem(item: LibraryItem): LibraryItem {
   return {
     ...item,
     voteCount: typeof item.voteCount === "number" ? item.voteCount : 0,
+    adult: typeof item.adult === "boolean" ? item.adult : false,
     genres: Array.isArray(item.genres) ? item.genres : [],
     notes: typeof item.notes === "string" ? item.notes : "",
   };
@@ -116,7 +108,6 @@ export interface RestoreSummary {
   settings: boolean;
   actions: number;
   library: number;
-  contentLevels: number;
   recentSearches: number;
   recentTitles: number;
   /** Entries dropped because they didn't match the expected shape. */
@@ -145,7 +136,6 @@ export function restoreBackup(raw: unknown): RestoreSummary {
     settings: false,
     actions: 0,
     library: 0,
-    contentLevels: 0,
     recentSearches: 0,
     recentTitles: 0,
     skipped: 0,
@@ -165,9 +155,6 @@ export function restoreBackup(raw: unknown): RestoreSummary {
     if (Array.isArray(s.regions) && s.regions.every((r) => typeof r === "string")) {
       patch.regions = s.regions as string[];
     }
-    if (s.maxContentLevel === null || isContentLevel(s.maxContentLevel)) {
-      patch.maxContentLevel = s.maxContentLevel;
-    }
     if (typeof s.sortOrder === "string") {
       patch.sortOrder = s.sortOrder as SettingsState["sortOrder"];
     }
@@ -185,16 +172,6 @@ export function restoreBackup(raw: unknown): RestoreSummary {
     const items = keepValid(data.library, isLibraryItem).map(healLibraryItem);
     useLibrary.setState({ items });
     summary.library = items.length;
-  }
-
-  if (isObject(data.content)) {
-    const levels: Record<string, ContentLevel> = {};
-    for (const [key, value] of Object.entries(data.content)) {
-      if (isContentLevel(value)) levels[key] = value;
-      else summary.skipped += 1;
-    }
-    useContentLevels.setState({ levels });
-    summary.contentLevels = Object.keys(levels).length;
   }
 
   if (Array.isArray(data.recent)) {

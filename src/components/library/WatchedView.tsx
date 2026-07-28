@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Eye, Pencil, Trash2, Undo2 } from "lucide-react";
 import { WatchedDialog } from "./WatchedDialog";
+import { AdultBadge } from "@/components/ui/adult-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconAction } from "@/components/ui/icon-action";
 import { PosterImage } from "@/components/ui/poster-image";
@@ -101,9 +102,10 @@ function WatchedRow({ item, onOpen, onEdit, onReturn, onRemove }: WatchedRowProp
     >
       <button
         onClick={onOpen}
-        className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary"
+        className="relative h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary"
       >
         <PosterImage path={item.posterPath} alt={item.title} size="w185" />
+        <AdultBadge adult={item.adult} className="absolute bottom-1 right-1" />
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col">
