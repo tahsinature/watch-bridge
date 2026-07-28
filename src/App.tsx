@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/Header";
@@ -12,6 +12,8 @@ import { PersonDetail } from "@/components/detail/PersonDetail";
 import { useUrlState } from "@/hooks/useUrlState";
 import { useHasApiKey } from "@/stores/settings";
 import { useLibrary } from "@/stores/library";
+import { finishStatePortCallback } from "@/lib/statePort";
+import { toast } from "@/stores/toast";
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -20,6 +22,17 @@ export default function App() {
     useUrlState();
   const hasApiKey = useHasApiKey();
   const canShowDetails = hasApiKey && !settingsOpen;
+
+  useEffect(() => {
+    void finishStatePortCallback()
+      .then((connected) => {
+        if (connected) {
+          toast("Connected to local State Port. Open Settings to load or save.", "success");
+          setSettingsOpen(true);
+        }
+      })
+      .catch((error) => toast(error instanceof Error ? error.message : "State Port connection failed", "error"));
+  }, []);
 
   /**
    * Clicking the brand returns to a clean Search view. SearchView owns its

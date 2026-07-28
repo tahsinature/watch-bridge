@@ -1,0 +1,1 @@
+{"name":"state-port","private":true,"workspaces":["apps/*"],"scripts":{"dev:api":"bun --watch apps/api/src/index.ts","dev:web":"bun --cwd apps/web dev","build":"bun --cwd apps/api build && bun --cwd apps/web build","typecheck":"bun --cwd apps/api typecheck && bun --cwd apps/web typecheck","test":"bun --cwd apps/api test"}}

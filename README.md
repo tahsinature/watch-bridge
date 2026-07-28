@@ -19,8 +19,9 @@ title up, one to read about it, one to see where it's streaming, one to find a
 copy, one to note that you finished it. WatchBridge collapses that into a single
 screen — and then lets you define, yourself, where a title goes next.
 
-It's a static web app. No server, no account, no database. It runs entirely in
-your browser and keeps everything there.
+It's a static web app. By default there is no server, account, or database: it
+runs entirely in your browser and keeps everything there. Local development can
+optionally connect to the bundled State Port MVP for explicit cross-browser backup.
 
 ## How it works
 
@@ -28,6 +29,7 @@ your browser and keeps everything there.
 flowchart LR
     TMDB[("TMDB")] -->|titles, art, trailers| APP
     APP["WatchBridge<br/>(your browser)"] -->|key · library · settings| LS[("localStorage")]
+    APP -.->|optional manual load/save| SP[("local State Port")]
     APP -->|actions you define| OUT["wherever you want it<br/>apps · servers · notes"]
 ```
 
@@ -49,7 +51,8 @@ one.
 
 WatchBridge talks to [TMDB](https://www.themoviedb.org) for everything it
 knows about a title, and you supply the key — free, takes a minute. It's stored
-in your browser and sent nowhere else.
+in your browser. If you explicitly save through local State Port, it is included
+in the whole-document backup; State Port does not encrypt it.
 
 That also means a link you share opens the _app_, not your data. There's nothing
 to leak, and nothing to sign into.
@@ -79,6 +82,51 @@ bun run version:patch
 ```
 
 The current version is shown at the bottom of the app's Settings dialog.
+
+## Testing local State Port integration
+
+This is a local-development integration only. Start State Port first:
+
+```bash
+cd config-sync-service
+docker compose up --build -d
+```
+
+Open [http://localhost:8080](http://localhost:8080), create or sign into an
+account, and create a State Port application with this exact redirect URL:
+
+```text
+http://localhost:5173/
+```
+
+Copy the application's public client ID. In another terminal, start Watch Bridge:
+
+```bash
+bun install
+bun run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173), then use **Settings → State
+Port (local)**. Paste the public client ID, select **Connect**, and approve the
+request in State Port. On return, **Load remote** explicitly replaces the local
+Watch Bridge document, while **Save local** writes the complete local backup.
+There is no automatic background sync.
+
+Watch Bridge stores the rotating State Port refresh credential in localStorage,
+so a reload normally reconnects without another login. Disconnecting clears
+this browser's credential; revoke the connection in the State Port dashboard to
+invalidate it server-side. Access tokens remain short-lived and in memory.
+
+If a save encounters a newer remote version, the local draft is preserved and
+automatic saving remains stopped. The UI offers only **Use remote
+configuration** or **Force overwrite with local**. Neither side is silently
+discarded and no generic merge is attempted. Whole-document semantic no-ops do
+not advance the remote version.
+
+Defaults are `http://localhost:3000` for the State Port API and
+`http://localhost:8080` for its dashboard. Copy `.env.example` to
+`.env.local` only if you need to change them. The registered redirect must
+exactly match the Watch Bridge origin/path, including its trailing slash.
 
 ## Built with
 

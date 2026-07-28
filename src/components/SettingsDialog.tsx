@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { JsonExportDialog } from "@/components/ui/json-export-dialog";
 import { JsonImportDialog } from "@/components/ui/json-import-dialog";
 import { ActionsSettings } from "@/components/actions/ActionsSettings";
+import { StatePortSection } from "@/components/StatePortSection";
 import { buildBackup, restoreBackup, BackupError } from "@/lib/backup";
 import { todayStamp } from "@/lib/download";
 import { useSettings } from "@/stores/settings";
@@ -42,7 +43,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            Everything is stored locally in your browser. Nothing leaves your device.
+            Everything stays in this browser unless you explicitly use local State Port sync.
           </DialogDescription>
         </DialogHeader>
 
@@ -54,7 +55,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           <TabsContent value="general" className="mt-5 space-y-6">
             <ApiKeySection />
-            <BackupSection />
+            <BackupAndSyncSection />
           </TabsContent>
 
           <TabsContent value="actions" className="mt-5">
@@ -134,7 +135,7 @@ function ApiKeySection() {
   );
 }
 
-function BackupSection() {
+function BackupAndSyncSection() {
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -193,42 +194,54 @@ function BackupSection() {
     <div className="space-y-3 border-t border-border pt-5">
       <div className="flex items-center gap-2">
         <DatabaseBackup className="h-4 w-4 text-primary" />
-        <Label>Backup &amp; restore</Label>
+        <Label>Backup &amp; Sync</Label>
       </div>
       <p className="text-xs text-muted-foreground">
-        Everything lives in this browser only. Export to move your library,
-        actions and preferences to another browser or device. Backups include
-        your TMDB API key, so treat them as a secret.
+        State Port and local backups use the same complete configuration document:
+        settings, actions, library, history, and your TMDB API key. State Port does
+        not provide end-to-end encryption, so treat remote and exported copies as
+        sensitive.
       </p>
 
-      <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-          <IconAction
-            label="Copy backup to clipboard"
-            variant="outline"
-            onClick={() => void handleQuickCopy()}
-          >
-            <ClipboardCopy />
-          </IconAction>
-        </div>
+      <StatePortSection />
 
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-            <Upload className="h-4 w-4" />
-            Import
-          </Button>
-          <IconAction
-            label="Restore backup from clipboard now"
-            variant="outline"
-            destructive
-            onClick={() => void handleQuickRestore()}
-          >
-            <ClipboardPaste />
-          </IconAction>
+      <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-4">
+        <div>
+          <p className="text-sm font-medium text-foreground">Local Backup</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Keep an offline JSON file as a fallback. Export and restore use the
+            same complete configuration as State Port.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+              <Download className="h-4 w-4" />
+              Export File
+            </Button>
+            <IconAction
+              label="Copy local backup to clipboard"
+              variant="outline"
+              onClick={() => void handleQuickCopy()}
+            >
+              <ClipboardCopy />
+            </IconAction>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4" />
+              Restore File
+            </Button>
+            <IconAction
+              label="Restore local backup from clipboard now"
+              variant="outline"
+              destructive
+              onClick={() => void handleQuickRestore()}
+            >
+              <ClipboardPaste />
+            </IconAction>
+          </div>
         </div>
       </div>
 
