@@ -17,7 +17,7 @@ const dialogContentVariants = cva(
          * unreadable.
          */
         fullscreen:
-          "inset-0 max-w-none border-0 data-[state=closed]:slide-out-to-bottom-8 data-[state=open]:slide-in-from-bottom-8 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
+          "inset-0 min-w-0 max-w-[100dvw] border-0 data-[state=closed]:slide-out-to-bottom-8 data-[state=open]:slide-in-from-bottom-8 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
       },
     },
     defaultVariants: { variant: "centered" },

@@ -11,7 +11,7 @@ export function CastStrip({ cast, onSelectPerson }: CastStripProps) {
   if (cast.length === 0) return null;
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+    <div className="flex w-full min-w-0 max-w-full gap-3 overflow-x-auto pb-2 scrollbar-thin">
       {cast.map((member, index) => {
         const photo = posterUrl(member.profilePath, "w185");
         return (
