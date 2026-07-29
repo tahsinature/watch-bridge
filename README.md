@@ -93,13 +93,7 @@ docker compose up --build -d
 ```
 
 Open [http://localhost:8080](http://localhost:8080), create or sign into an
-account, and create a State Port application with this exact redirect URL:
-
-```text
-http://localhost:5173/
-```
-
-Copy the application's public client ID. In another terminal, start Watch Bridge:
+account. In another terminal, start Watch Bridge:
 
 ```bash
 bun install
@@ -107,10 +101,23 @@ bun run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173), then use **Settings → State
-Port (local)**. Paste the public client ID, select **Connect**, and approve the
-request in State Port. On return, **Load remote** explicitly replaces the local
-Watch Bridge document, while **Save local** writes the complete local backup.
-There is no automatic background sync.
+Port Sync → Sign in with State Port**. Watch Bridge uses its built-in public
+client identity, so ordinary users do not create an application or paste a
+client UUID. Sign in and approve the requested read/write access in State Port.
+On return, **Load Remote Configuration** explicitly replaces the local Watch
+Bridge document, while **Save Local Configuration** writes the complete local
+backup. There is no automatic background sync.
+
+For a TV or console, choose **Use a TV or console code**. Watch Bridge displays
+a short, one-time code and the State Port verification URL—there is no QR
+image. Open that URL on a phone or computer, enter the code, review the
+application name and requested access, then approve or deny it. The code expires
+after ten minutes; Watch Bridge stops polling at expiry or when the pairing
+panel is closed.
+
+The built-in identity is public, not a secret. **Advanced / self-hosted client**
+keeps a secondary client-ID override for administrators who intentionally use a
+separate registered State Port application.
 
 Watch Bridge stores the rotating State Port refresh credential in localStorage,
 so a reload normally reconnects without another login. Disconnecting clears
@@ -125,8 +132,9 @@ not advance the remote version.
 
 Defaults are `http://localhost:3000` for the State Port API and
 `http://localhost:8080` for its dashboard. Copy `.env.example` to
-`.env.local` only if you need to change them. The registered redirect must
-exactly match the Watch Bridge origin/path, including its trailing slash.
+`.env.local` only if you need to change them. Self-hosted operators can replace
+the public built-in client ID consistently in Watch Bridge and State Port, and
+must register exact Watch Bridge redirect URLs, including their trailing slash.
 
 ## Built with
 

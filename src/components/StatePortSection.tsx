@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Cloud, Link, Loader2, LogOut, RefreshCw, UploadCloud } from "lucide-react";
+import { Cloud, Loader2, LogOut, RefreshCw, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { StatePortConnectOptions } from "@/components/StatePortConnectOptions";
 import { toast } from "@/stores/toast";
 import {
   beginStatePortConnect,
@@ -16,8 +16,8 @@ import {
 } from "@/lib/statePort";
 
 export function StatePortSection() {
-  const [clientId, setClientId] = useState(getStatePortConnection()?.clientId ?? "");
-  const [connected, setConnected] = useState(Boolean(getStatePortConnection()));
+  const initialConnection = getStatePortConnection();
+  const [connected, setConnected] = useState(Boolean(initialConnection));
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState<Extract<SaveResult, { kind: "conflict" }> | null>(null);
@@ -25,11 +25,16 @@ export function StatePortSection() {
   const run = async (label: string, action: () => Promise<void>) => {
     setBusyAction(label);
     setError(null);
-    try { await action(); } catch (error) {
-      const message = error instanceof Error ? error.message : "State Port request failed";
+    try {
+      await action();
+    } catch (caught) {
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
+      const message = caught instanceof Error ? caught.message : "State Port request failed";
       setError(message);
       toast(message, "error");
-    } finally { setBusyAction(null); }
+    } finally {
+      setBusyAction(null);
+    }
   };
 
   return <div className="space-y-3 rounded-lg border border-primary/25 bg-primary/5 p-4">
@@ -38,33 +43,34 @@ export function StatePortSection() {
       {connected && <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">Connected</span>}
     </div>
     <p className="text-xs leading-relaxed text-muted-foreground">
-      Save or load the complete Watch Bridge configuration using your local State
-      Port service. This includes the TMDB key and is not end-to-end encrypted.
+      Save or load the complete Watch Bridge configuration using State Port. This
+      includes the TMDB key and is not end-to-end encrypted.
     </p>
-    {!connected ? <div className="space-y-2">
-      <Label htmlFor="state-port-client-id" className="text-xs">Public client ID</Label>
-      <Input id="state-port-client-id" value={clientId} disabled={Boolean(busyAction)} onChange={(event) => setClientId(event.target.value.trim())} placeholder="Paste the State Port client ID" className="font-mono" />
-      <Button size="sm" variant="default" disabled={!clientId || Boolean(busyAction)} onClick={() => void run("Connecting", async () => beginStatePortConnect(clientId))}>
-        {busyAction === "Connecting" ? <Loader2 className="animate-spin" /> : <Link className="h-4 w-4" />}
-        {busyAction === "Connecting" ? "Connecting…" : "Connect to State Port"}
-      </Button>
-    </div> : <>
-      <p className="break-all font-mono text-[11px] text-muted-foreground">Connected client: {clientId}</p>
+
+    {!connected ? <StatePortConnectOptions
+      disabled={Boolean(busyAction)}
+      onBrowserConnect={(override) => run("Connecting", () => beginStatePortConnect(override))}
+      onDeviceConnected={() => {
+        setConnected(true);
+        toast("Device connected to State Port", "success");
+      }}
+    /> : <>
+      <p className="break-all font-mono text-[11px] text-muted-foreground">Connected to State Port</p>
       {!conflict ? <div className="flex flex-wrap gap-2">
         <Button size="sm" disabled={Boolean(busyAction)} onClick={() => void run("Saving", async () => {
           const result = await saveStatePortLocal();
           if (result.kind === "conflict") setConflict(result);
           else toast(result.unchanged ? "Remote state is already current" : `Saved remote version ${result.version}`, "success");
-        })}>{busyAction === "Saving" ? <Loader2 className="animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+        })}>{busyAction === "Saving" ? <Loader2 className="animate-spin" /> : <UploadCloud />}
           {busyAction === "Saving" ? "Saving…" : "Save Local Configuration"}</Button>
         <Button size="sm" variant="outline" disabled={Boolean(busyAction)} onClick={() => void run("Loading", async () => {
           const summary = await loadStatePortRemote();
           toast(`Loaded ${summary.library} titles and ${summary.actions} actions`, "success");
-        })}>{busyAction === "Loading" ? <Loader2 className="animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+        })}>{busyAction === "Loading" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
           {busyAction === "Loading" ? "Loading…" : "Load Remote Configuration"}</Button>
-        <Button size="sm" variant="ghost" disabled={Boolean(busyAction)} onClick={() => { disconnectStatePort(); setConnected(false); setError(null); }}>
-          <LogOut className="h-4 w-4" />Disconnect
-        </Button>
+        <Button size="sm" variant="ghost" disabled={Boolean(busyAction)} onClick={() => {
+          disconnectStatePort(); setConnected(false); setError(null);
+        }}><LogOut />Disconnect</Button>
       </div> : <div className="rounded-lg border border-destructive/40 p-3 text-xs">
         <p className="mb-3"><strong>Version conflict.</strong> Your local configuration is preserved. Choose which whole document to keep.</p>
         <div className="flex flex-wrap gap-2">

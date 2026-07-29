@@ -2,6 +2,7 @@ import { buildBackup, restoreBackup, type BackupFile, type RestoreSummary } from
 
 const apiUrl = import.meta.env.VITE_STATE_PORT_API_URL ?? "http://localhost:3000";
 const dashboardUrl = import.meta.env.VITE_STATE_PORT_DASHBOARD_URL ?? "http://localhost:8080";
+const builtInClientId = import.meta.env.VITE_STATE_PORT_CLIENT_ID ?? "6f3f0f60-9c59-4f23-b5bb-0b318115d68d";
 const connectionKey = "watchbridge.state-port.connection";
 const pendingKey = "watchbridge.state-port.pending";
 
@@ -23,6 +24,16 @@ interface RemoteState {
   state: unknown;
   version: number;
   updatedAt: string;
+}
+
+export interface DeviceAuthorization {
+  clientId: string;
+  deviceCode: string;
+  userCode: string;
+  verificationUri: string;
+  verificationUriComplete: string;
+  expiresAt: number;
+  interval: number;
 }
 
 export type SaveResult =
@@ -48,7 +59,11 @@ export function getStatePortConnection() {
   }
 }
 
-export async function beginStatePortConnect(clientId: string) {
+export function getBuiltInStatePortClientId() {
+  return builtInClientId;
+}
+
+export async function beginStatePortConnect(clientId = builtInClientId) {
   const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = base64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
   const state = crypto.randomUUID();
@@ -61,6 +76,72 @@ export async function beginStatePortConnect(clientId: string) {
   authorize.searchParams.set("scope", "state:read state:write");
   authorize.searchParams.set("state", state);
   location.assign(authorize);
+}
+
+export async function requestStatePortDeviceCode(
+  clientId = builtInClientId,
+  signal?: AbortSignal,
+): Promise<DeviceAuthorization> {
+  const response = await fetch(`${apiUrl}/v1/device/authorize?client_id=${encodeURIComponent(clientId)}`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ clientId, scopes: ["state:read", "state:write"] }),
+    signal,
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error ?? "Could not start device connection.");
+  return { ...result, clientId, expiresAt: Date.now() + result.expiresIn * 1000 };
+}
+
+export async function pollStatePortDeviceCode(
+  authorization: DeviceAuthorization,
+  signal: AbortSignal,
+  onStatus?: (status: string) => void,
+) {
+  let interval = authorization.interval;
+  const polling = new AbortController();
+  const cancelPolling = () => polling.abort(signal.reason);
+  signal.addEventListener("abort", cancelPolling, { once: true });
+  const expiryTimeout = globalThis.setTimeout(
+    () => polling.abort(new DOMException("The device code expired.", "TimeoutError")),
+    Math.max(0, authorization.expiresAt - Date.now()),
+  );
+  try {
+    while (Date.now() < authorization.expiresAt) {
+      await wait(interval * 1000, polling.signal);
+      const response = await fetch(`${apiUrl}/v1/device/token?client_id=${encodeURIComponent(authorization.clientId)}`, {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clientId: authorization.clientId, deviceCode: authorization.deviceCode }),
+        signal: polling.signal,
+      });
+      const result = await response.json();
+      if (response.ok) {
+        await acceptTokens(authorization.clientId, result);
+        return;
+      }
+      if (result.error === "authorization_pending") {
+        interval = result.interval ?? interval;
+        onStatus?.("Waiting for approval…");
+        continue;
+      }
+      if (result.error === "slow_down") {
+        interval = result.interval ?? interval + 5;
+        onStatus?.("Polling slowed by State Port…");
+        continue;
+      }
+      if (result.error === "access_denied") throw new Error("The device connection was denied.");
+      if (result.error === "expired_token") throw new Error("The device code expired. Start again.");
+      throw new Error("The device connection could not be completed.");
+    }
+  } catch (error) {
+    if (Date.now() >= authorization.expiresAt) {
+      throw new Error("The device code expired. Start again.");
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(expiryTimeout);
+    signal.removeEventListener("abort", cancelPolling);
+  }
+  throw new Error("The device code expired. Start again.");
 }
 
 export function finishStatePortCallback(): Promise<boolean> {
@@ -82,9 +163,7 @@ async function finishCallbackOnce(): Promise<boolean> {
     grantType: "authorization_code", clientId: pending.clientId, redirectUri: pending.redirectUri,
     code, codeVerifier: pending.verifier,
   });
-  access = { token: tokens.accessToken, expiresAt: Date.now() + tokens.expiresIn * 1000 };
-  const remote = await readWithAccess(pending.clientId, tokens.accessToken);
-  saveConnection({ clientId: pending.clientId, refreshToken: tokens.refreshToken, refreshExpiresAt: tokens.refreshExpiresAt, version: remote.version });
+  await acceptTokens(pending.clientId, tokens);
   sessionStorage.removeItem(pendingKey);
   history.replaceState(null, "", `${location.pathname}${location.hash}`);
   return true;
@@ -165,6 +244,12 @@ async function requestTokens(clientId: string, body: object): Promise<TokenRespo
   return result;
 }
 
+async function acceptTokens(clientId: string, tokens: TokenResponse) {
+  access = { token: tokens.accessToken, expiresAt: Date.now() + tokens.expiresIn * 1000 };
+  const remote = await readWithAccess(clientId, tokens.accessToken);
+  saveConnection({ clientId, refreshToken: tokens.refreshToken, refreshExpiresAt: tokens.refreshExpiresAt, version: remote.version });
+}
+
 async function readWithAccess(clientId: string, token: string): Promise<RemoteState> {
   const response = await fetch(`${apiUrl}/v1/state/${clientId}`, { headers: { authorization: `Bearer ${token}` } });
   const result = await response.json();
@@ -185,4 +270,18 @@ function saveConnection(connection: Connection) {
 function base64url(value: ArrayBuffer | Uint8Array) {
   const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
   return btoa(String.fromCharCode(...bytes)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+function wait(milliseconds: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const onAbort = () => {
+      globalThis.clearTimeout(timeout);
+      reject(new DOMException("Device connection cancelled.", "AbortError"));
+    };
+    const timeout = globalThis.setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, milliseconds);
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
 }
