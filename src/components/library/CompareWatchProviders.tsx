@@ -60,7 +60,7 @@ export function CompareWatchProviders({
       href={providers.link}
       target="_blank"
       rel="noreferrer"
-      className="group/watch block min-w-40 space-y-1.5"
+      className="group/watch block min-w-0 space-y-1.5 sm:min-w-40"
       title={`Open ${region} availability on JustWatch`}
     >
       {groups.map((group) => (

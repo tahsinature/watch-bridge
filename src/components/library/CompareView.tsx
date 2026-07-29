@@ -56,8 +56,8 @@ export function CompareView({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[min(96vw,80rem)] max-w-none gap-0 overflow-hidden p-0">
-        <DialogHeader className="flex-row items-center justify-between gap-4 border-b border-border px-5 py-4 pr-14">
+      <DialogContent className="max-h-[92vh] w-[calc(100vw-1rem)] max-w-none gap-0 overflow-hidden p-0 sm:w-[min(96vw,80rem)]">
+        <DialogHeader className="flex-row items-center justify-between gap-3 border-b border-border px-4 py-4 pr-14 sm:gap-4 sm:px-5">
           <DialogTitle>
             Compare{" "}
             <span className="font-normal text-muted-foreground">
@@ -168,10 +168,10 @@ function CompareTable({
 
   return (
     <Table
-      containerClassName="max-h-[calc(92vh-4.5rem)] scrollbar-thin"
-      className="min-w-max border-separate border-spacing-0"
+      containerClassName="max-h-[calc(92vh-4.5rem)] overflow-x-hidden overflow-y-auto scrollbar-thin sm:overflow-auto"
+      className="block min-w-0 border-separate border-spacing-0 sm:table sm:min-w-max"
     >
-      <TableHeader className="sticky top-0 z-30 bg-popover shadow-[0_1px_0_hsl(var(--border))]">
+      <TableHeader className="sticky top-0 z-30 hidden bg-popover shadow-[0_1px_0_hsl(var(--border))] sm:table-header-group">
         <TableRow className="hover:bg-transparent">
           <TableHead className="sticky left-0 z-40 min-w-64 border-r border-border bg-popover px-4 text-[10px] uppercase tracking-wider text-muted-foreground">
             Title
@@ -192,7 +192,7 @@ function CompareTable({
           ))}
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody className="block space-y-3 p-3 [&_tr:last-child]:border sm:table-row-group sm:space-y-0 sm:p-0 sm:[&_tr:last-child]:border-0">
         {items.map((item) => (
           <CompareTableRow
             key={`${item.mediaType}-${item.id}`}

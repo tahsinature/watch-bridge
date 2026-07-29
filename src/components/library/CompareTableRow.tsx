@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Star } from "lucide-react";
 import { AdultBadge } from "@/components/ui/adult-badge";
 import { AudienceSignal } from "@/components/ui/audience-signal";
@@ -13,6 +14,7 @@ import { CompareWatchProviders } from "./CompareWatchProviders";
 import { useDetails } from "@/hooks/useTmdb";
 import type { CompareField } from "@/lib/compareFields";
 import { formatRating, formatRuntime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { LibraryItem, TitleDetails } from "@/types";
 
 interface CompareTableRowProps {
@@ -42,12 +44,12 @@ export function CompareTableRow({
   const genres = data?.genres.length ? data.genres : item.genres;
 
   return (
-    <TableRow className="group h-[5.25rem] bg-background/20">
-      <TableCell className="sticky left-0 z-20 border-r border-border bg-popover p-0 group-hover:bg-secondary">
+    <TableRow className="group block h-auto overflow-hidden border border-border bg-background/20 sm:table-row sm:h-[5.25rem] sm:border-x-0 sm:border-t-0">
+      <TableCell className="block border-b border-border bg-secondary/35 p-0 group-hover:bg-secondary sm:sticky sm:left-0 sm:z-20 sm:table-cell sm:border-b-0 sm:border-r sm:bg-popover">
         <button
           type="button"
           onClick={onOpen}
-          className="flex w-full min-w-64 items-center gap-3 px-4 py-2 text-left"
+          className="flex w-full min-w-0 items-center gap-3 px-4 py-3 text-left sm:min-w-64 sm:py-2"
         >
           <span className="h-16 w-11 shrink-0 overflow-hidden border border-border bg-secondary">
             <PosterImage
@@ -71,13 +73,13 @@ export function CompareTableRow({
       </TableCell>
 
       {fields.includes("rating") ? (
-        <TableCell className="px-4">
+        <CompareValueCell label="Rating">
           <RatingCell average={voteAverage} />
-        </TableCell>
+        </CompareValueCell>
       ) : null}
 
       {fields.includes("votes") ? (
-        <TableCell className="px-4">
+        <CompareValueCell label="Audience">
           {voteCount > 0 ? (
             <AudienceSignal
               votes={voteCount}
@@ -87,34 +89,38 @@ export function CompareTableRow({
           ) : (
             <EmptyValue />
           )}
-        </TableCell>
+        </CompareValueCell>
       ) : null}
 
       {fields.includes("runtime") ? (
-        <TableCell className="px-4 text-xs">
+        <CompareValueCell label="Length" valueClassName="text-xs">
           {isLoading && !length ? (
             <Skeleton className="h-4 w-12 rounded-none" />
           ) : (
             length ?? <EmptyValue />
           )}
-        </TableCell>
+        </CompareValueCell>
       ) : null}
 
       {fields.includes("ageRating") ? (
-        <TableCell className="px-4">
+        <CompareValueCell label="Age rating">
           <AgeRatingCell
             details={data}
             region={region}
             adult={data?.adult ?? item.adult}
             loading={isLoading}
           />
-        </TableCell>
+        </CompareValueCell>
       ) : null}
 
       {fields.includes("genres") ? (
-        <TableCell className="max-w-56 whitespace-normal px-4">
+        <CompareValueCell
+          label="Genres"
+          className="sm:max-w-56"
+          valueClassName="whitespace-normal"
+        >
           {genres.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap justify-end gap-1 sm:justify-start">
               {genres.slice(0, 3).map((genre) => (
                 <Badge
                   key={genre}
@@ -128,28 +134,31 @@ export function CompareTableRow({
           ) : (
             <EmptyValue />
           )}
-        </TableCell>
+        </CompareValueCell>
       ) : null}
 
       {fields.includes("watchProviders") ? (
-        <TableCell className="px-4">
+        <CompareValueCell
+          label={region ? `Watch · ${region}` : "Watch"}
+          valueClassName="min-w-0"
+        >
           <CompareWatchProviders
             region={region}
             providers={region ? data?.watchProviders[region] : undefined}
             loading={isLoading}
             failed={isError}
           />
-        </TableCell>
+        </CompareValueCell>
       ) : null}
 
       {fields.includes("userRating") ? (
-        <TableCell className="px-4">
+        <CompareValueCell label="Your rating">
           {item.userRating != null ? (
             <StarRating value={item.userRating} size="sm" />
           ) : (
             <EmptyValue />
           )}
-        </TableCell>
+        </CompareValueCell>
       ) : null}
     </TableRow>
   );
@@ -203,6 +212,39 @@ function AgeRatingCell({
 
 function EmptyValue() {
   return <span className="text-xs text-muted-foreground/60">—</span>;
+}
+
+function CompareValueCell({
+  label,
+  className,
+  valueClassName,
+  children,
+}: {
+  label: string;
+  className?: string;
+  valueClassName?: string;
+  children: ReactNode;
+}) {
+  return (
+    <TableCell
+      className={cn(
+        "grid min-h-11 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3 border-b border-border/60 px-4 py-2 last:border-b-0 sm:table-cell sm:min-h-0 sm:border-b-0 sm:px-4",
+        className,
+      )}
+    >
+      <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground sm:hidden">
+        {label}
+      </span>
+      <div
+        className={cn(
+          "min-w-0 justify-self-end sm:justify-self-auto",
+          valueClassName,
+        )}
+      >
+        {children}
+      </div>
+    </TableCell>
+  );
 }
 
 function formatSeriesLength(
