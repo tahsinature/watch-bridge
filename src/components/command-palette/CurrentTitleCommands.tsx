@@ -1,6 +1,7 @@
 import {
   Bookmark,
   BookmarkX,
+  CalendarDays,
   Copy,
   Download,
   Eye,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/command";
 import { actionIcon } from "@/lib/icons";
 import {
+  copyTitle,
   copyPosterImage,
   copyPosterUrl,
   copyTitleAndYear,
@@ -58,13 +60,23 @@ export function CurrentTitleCommands({
     <>
       <CommandGroup heading={`Current title · ${details.title}`}>
         <CommandItem
+          value={`copy title only no year ${details.title}`}
+          onSelect={() => {
+            onClosePalette();
+            void copyTitle(details);
+          }}
+        >
+          <Copy />
+          <span>Copy title</span>
+        </CommandItem>
+        <CommandItem
           value={`copy title year ${details.title}`}
           onSelect={() => {
             onClosePalette();
             void copyTitleAndYear(details);
           }}
         >
-          <Copy />
+          <CalendarDays />
           <span>Copy title and year</span>
         </CommandItem>
 

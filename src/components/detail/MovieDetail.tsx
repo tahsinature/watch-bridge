@@ -1,9 +1,7 @@
 import {
   AlertCircle,
   ArrowLeft,
-  Check,
   Clapperboard,
-  Copy,
   Tv,
 } from "lucide-react";
 import {
@@ -14,23 +12,21 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconAction } from "@/components/ui/icon-action";
 import { RatingBadge } from "@/components/ui/rating-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TitleFacts } from "./TitleFacts";
 import { ActionBar } from "@/components/actions/ActionBar";
 import { LabeledBlock } from "./LabeledRow";
 import { PosterActions } from "./PosterActions";
+import { CopyTitleMenu } from "./CopyTitleMenu";
 import { DetailActionBar } from "./DetailActionBar";
 import { CastStrip } from "./CastStrip";
 import { TrailerGallery } from "./TrailerGallery";
 import { TitleRecommendations } from "./TitleRecommendations";
 import { WhereToWatch } from "./WhereToWatch";
 import { useDetails } from "@/hooks/useTmdb";
-import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { useSyncLibraryMetadata } from "@/stores/library";
 import { backdropUrl, posterUrl } from "@/lib/tmdb";
-import { copyTitleAndYear } from "@/lib/titleActions";
 import type {
   PersonSelection,
   SelectionRef,
@@ -125,15 +121,8 @@ function DetailBody({
   const backdrop = backdropUrl(details.backdropPath, "w1280");
   const heroPoster = posterUrl(details.posterPath, "w342");
 
-  const [titleCopied, flagTitleCopied] = useCopiedFlag();
-
   // Opening a saved title is the natural moment to refresh its stored metadata.
   useSyncLibraryMetadata(details);
-
-  const copyTitle = async () => {
-    await copyTitleAndYear(details);
-    flagTitleCopied();
-  };
 
   return (
     <div className="pb-6">
@@ -195,14 +184,13 @@ function DetailBody({
               <div className="flex w-full min-w-0 items-start gap-1 sm:w-auto">
                 <h2 className="min-w-0 break-words text-balance text-xl font-bold leading-tight sm:text-2xl">
                   {details.title}
+                  {details.year ? (
+                    <span className="ml-2 whitespace-nowrap text-base font-medium text-muted-foreground sm:text-lg">
+                      ({details.year})
+                    </span>
+                  ) : null}
                 </h2>
-                <IconAction label="Copy title and year" onClick={copyTitle}>
-                  {titleCopied ? (
-                    <Check className="size-4" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
-                </IconAction>
+                <CopyTitleMenu title={details.title} year={details.year} />
               </div>
               <RatingBadge
                 average={details.voteAverage}

@@ -12,13 +12,18 @@ interface PosterActionContext extends TitleTextContext {
   posterPath: string | null;
 }
 
+export async function copyTitle({ title }: TitleTextContext): Promise<void> {
+  await navigator.clipboard.writeText(title);
+  toast("Title copied", "success");
+}
+
 export async function copyTitleAndYear({
   title,
   year,
 }: TitleTextContext): Promise<void> {
   const yearSuffix = year ? ` (${year})` : "";
   await navigator.clipboard.writeText(`${title}${yearSuffix}`);
-  toast("Title copied", "success");
+  toast("Title and year copied", "success");
 }
 
 export async function copyPosterImage({
