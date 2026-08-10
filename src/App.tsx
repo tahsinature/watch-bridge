@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/Header";
+import { CommandPalette } from "@/components/CommandPalette";
 import { ApiKeyGate } from "@/components/ApiKeyGate";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SearchView } from "@/components/search/SearchView";
@@ -17,6 +18,7 @@ import { toast } from "@/stores/toast";
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [homeKey, setHomeKey] = useState(0);
   const { view, selection, person, setView, setSelection, setPerson } =
     useUrlState();
@@ -62,6 +64,7 @@ export default function App() {
           onGoHome={goHome}
           shortlistCount={counts.shortlist}
           watchedCount={counts.watched}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
 
@@ -82,13 +85,25 @@ export default function App() {
           onClose={() => setSelection(null)}
           onSelectTitle={setSelection}
           onSelectPerson={setPerson}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         />
         <PersonDetail
           person={canShowDetails ? person : null}
           onClose={() => setPerson(null)}
           onSelectTitle={setSelection}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <CommandPalette
+          open={commandPaletteOpen}
+          onOpenChange={setCommandPaletteOpen}
+          view={view}
+          selection={selection}
+          onGoHome={goHome}
+          onViewChange={setView}
+          onSelectTitle={setSelection}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
         <Toaster />
       </div>
     </TooltipProvider>

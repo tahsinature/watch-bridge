@@ -1,4 +1,4 @@
-import { Clapperboard, Settings } from "lucide-react";
+import { Clapperboard, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -15,6 +15,7 @@ interface HeaderProps {
   onGoHome: () => void;
   shortlistCount: number;
   watchedCount: number;
+  onOpenCommandPalette: () => void;
   onOpenSettings: () => void;
 }
 
@@ -24,6 +25,7 @@ export function Header({
   onGoHome,
   shortlistCount,
   watchedCount,
+  onOpenCommandPalette,
   onOpenSettings,
 }: HeaderProps) {
   return (
@@ -55,19 +57,40 @@ export function Header({
           watchedCount={watchedCount}
         />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onOpenSettings}
-              aria-label="Open settings"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Settings</TooltipContent>
-        </Tooltip>
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onOpenCommandPalette}
+                aria-label="Search titles or run a command"
+                className="h-10 min-w-10 px-2 lg:h-8 lg:min-w-0 lg:px-3"
+              >
+                <Search />
+                <span className="hidden lg:inline">Quick find</span>
+                <kbd className="hidden border border-border bg-background px-1.5 py-0.5 text-[9px] text-muted-foreground xl:inline">
+                  ⌘K
+                </kbd>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Quick find · ⌘/Ctrl K or /</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onOpenSettings}
+                aria-label="Open settings"
+              >
+                <Settings />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Settings</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     </header>
   );

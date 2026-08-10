@@ -30,6 +30,7 @@ interface PersonDetailProps {
   person: PersonSelection | null;
   onClose: () => void;
   onSelectTitle: (ref: SelectionRef) => void;
+  onOpenCommandPalette: () => void;
 }
 
 /** Acting and creative filmography, opened from a title's people credits. */
@@ -37,6 +38,7 @@ export function PersonDetail({
   person,
   onClose,
   onSelectTitle,
+  onOpenCommandPalette,
 }: PersonDetailProps) {
   const { data, isLoading, error } = usePerson(
     person?.id,
@@ -77,7 +79,10 @@ export function PersonDetail({
           )}
         </div>
 
-        <DetailActionBar onClose={onClose} />
+        <DetailActionBar
+          onClose={onClose}
+          onOpenCommandPalette={onOpenCommandPalette}
+        />
       </DialogContent>
     </Dialog>
   );

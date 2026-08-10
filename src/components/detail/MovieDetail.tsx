@@ -29,8 +29,8 @@ import { WhereToWatch } from "./WhereToWatch";
 import { useDetails } from "@/hooks/useTmdb";
 import { useCopiedFlag } from "@/hooks/useCopiedFlag";
 import { useSyncLibraryMetadata } from "@/stores/library";
-import { toast } from "@/stores/toast";
 import { backdropUrl, posterUrl } from "@/lib/tmdb";
+import { copyTitleAndYear } from "@/lib/titleActions";
 import type {
   PersonSelection,
   SelectionRef,
@@ -42,6 +42,7 @@ interface MovieDetailProps {
   onClose: () => void;
   onSelectTitle: (ref: SelectionRef) => void;
   onSelectPerson: (person: PersonSelection) => void;
+  onOpenCommandPalette: () => void;
 }
 
 export function MovieDetail({
@@ -49,6 +50,7 @@ export function MovieDetail({
   onClose,
   onSelectTitle,
   onSelectPerson,
+  onOpenCommandPalette,
 }: MovieDetailProps) {
   const { data, isLoading, error } = useDetails(
     selected?.mediaType,
@@ -97,7 +99,13 @@ export function MovieDetail({
           )}
         </div>
 
-        {data && <DetailActionBar details={data} onClose={onClose} />}
+        {data && (
+          <DetailActionBar
+            details={data}
+            onClose={onClose}
+            onOpenCommandPalette={onOpenCommandPalette}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -123,10 +131,8 @@ function DetailBody({
   useSyncLibraryMetadata(details);
 
   const copyTitle = async () => {
-    const year = details.year ? ` (${details.year})` : "";
-    await navigator.clipboard.writeText(`${details.title}${year}`);
+    await copyTitleAndYear(details);
     flagTitleCopied();
-    toast("Title copied", "success");
   };
 
   return (

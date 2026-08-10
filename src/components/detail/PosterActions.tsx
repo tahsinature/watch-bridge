@@ -1,10 +1,12 @@
 import { Check, Copy, Download, Link } from "lucide-react";
 import { IconAction } from "@/components/ui/icon-action";
 import { useCopiedFlag } from "@/hooks/useCopiedFlag";
-import { copyImage, downloadImage } from "@/lib/poster";
-import { formatFileSize, posterFilename } from "@/lib/format";
 import { posterUrl } from "@/lib/tmdb";
-import { toast } from "@/stores/toast";
+import {
+  copyPosterImage,
+  copyPosterUrl,
+  downloadPoster,
+} from "@/lib/titleActions";
 
 interface PosterActionsProps {
   /** TMDB poster path; sizes are derived per action. */
@@ -29,33 +31,17 @@ export function PosterActions({ posterPath, title, year }: PosterActionsProps) {
   if (!fullUrl || !clipboardUrl) return null;
 
   async function handleCopy() {
-    const outcome = await copyImage(clipboardUrl!, fullUrl!);
+    await copyPosterImage({ posterPath, title, year });
     flagCopied();
-    if (outcome.kind === "copied-image") {
-      toast("Poster copied to clipboard", "success", {
-        description: `PNG · ${outcome.width} × ${outcome.height} · ${formatFileSize(outcome.bytes)}`,
-        image: {
-          src: clipboardUrl!,
-          alt: `${title} poster`,
-        },
-      });
-      return;
-    }
-    toast("Poster URL copied", "success");
   }
 
   async function handleDownload() {
-    const outcome = await downloadImage(fullUrl!, posterFilename(title, year));
+    await downloadPoster({ posterPath, title, year });
     flagDownloaded();
-    toast(
-      outcome === "downloaded" ? "Poster downloaded" : "Poster opened in a new tab",
-      "success",
-    );
   }
 
   async function handleCopyUrl() {
-    await navigator.clipboard.writeText(fullUrl!);
-    toast("Poster URL copied", "success");
+    await copyPosterUrl({ posterPath, title, year });
   }
 
   return (
