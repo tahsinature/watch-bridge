@@ -1,6 +1,6 @@
 import type { MinimumVotes, SearchResult } from "@/types";
 
-export const DEFAULT_MINIMUM_VOTES: MinimumVotes = 1_000;
+export const DEFAULT_MINIMUM_VOTES: MinimumVotes = 0;
 
 export const MINIMUM_VOTE_OPTIONS: {
   value: MinimumVotes;
