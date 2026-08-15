@@ -3,6 +3,8 @@ import { AdultBadge } from "@/components/ui/adult-badge";
 import { Badge } from "@/components/ui/badge";
 import { CopyTextButton } from "@/components/ui/copy-text-button";
 import { CreativeCreditPreview } from "./CreativeCreditPreview";
+import { GenreTags } from "./GenreTags";
+import { LanguageTags } from "./LanguageTags";
 import { LabeledBlock, LabeledRow } from "./LabeledRow";
 import { useSettings } from "@/stores/settings";
 import { formatReleaseSpan, formatRuntime } from "@/lib/format";
@@ -83,13 +85,13 @@ export function TitleFacts({
 
       {languages.length > 0 && (
         <LabeledRow label="Language">
-          <span className="text-sm">{languages.join(" · ")}</span>
+          <LanguageTags languages={languages} />
         </LabeledRow>
       )}
 
       {details.genres.length > 0 && (
         <LabeledRow label="Genres">
-          <span className="text-sm">{details.genres.join(" · ")}</span>
+          <GenreTags genres={details.genres} />
         </LabeledRow>
       )}
 

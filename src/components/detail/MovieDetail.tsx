@@ -215,12 +215,6 @@ function DetailBody({
 
       {/* Body */}
       <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-7 px-4 pt-5 sm:px-6">
-        {details.cast.length > 0 && (
-          <Section title="Cast">
-            <CastStrip cast={details.cast} onSelectPerson={onSelectPerson} />
-          </Section>
-        )}
-
         <Section title="Details">
           <TitleFacts
             details={details}
@@ -228,6 +222,12 @@ function DetailBody({
             onSelectTitle={onSelectTitle}
           />
         </Section>
+
+        {details.cast.length > 0 && (
+          <Section title="Cast">
+            <CastStrip cast={details.cast} onSelectPerson={onSelectPerson} />
+          </Section>
+        )}
 
         <Section title="Actions">
           <LabeledBlock>
