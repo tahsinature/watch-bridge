@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "test": "bun test",
     "preview": "vite preview",
+    "search-index:build": "bun run scripts/build-search-index.ts",
     "typecheck": "tsc --noEmit",
     "version:patch": "bun pm version patch --no-git-tag-version"
   },

@@ -9,10 +9,12 @@ import type { SearchResult } from "@/types";
 export function TitleResultCommands({
   results,
   searching,
+  closestMatches = false,
   onSelect,
 }: {
   results: SearchResult[];
   searching: boolean;
+  closestMatches?: boolean;
   onSelect: (result: SearchResult) => void;
 }) {
   if (results.length === 0) return null;
@@ -20,7 +22,15 @@ export function TitleResultCommands({
   return (
     <>
       <CommandSeparator />
-      <CommandGroup heading={searching ? "Searching titles…" : "Titles"}>
+      <CommandGroup
+        heading={
+          searching
+            ? "Searching titles…"
+            : closestMatches
+              ? "Closest titles"
+              : "Titles"
+        }
+      >
         {results.map((result) => (
           <CommandItem
             key={`${result.mediaType}-${result.id}`}

@@ -17,9 +17,9 @@ export function SearchBar({ value, onChange, loading }: SearchBarProps) {
           autoFocus
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Search a movie or series…"
+          placeholder="Search titles or people…"
           className="h-14 rounded-none border-0 bg-transparent pl-11 pr-11 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          aria-label="Search movies and series"
+          aria-label="Search movies, series, actors, directors, and producers"
         />
         <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
           {loading ? (

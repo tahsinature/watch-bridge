@@ -46,7 +46,9 @@ function parsePerson(
   const id = Number(raw);
   if (!raw || !Number.isInteger(id) || id <= 0) return null;
   const creditMode: PersonCreditMode =
-    rawCreditMode === "creative" ? "creative" : "acting";
+    rawCreditMode === "creative" || rawCreditMode === "production"
+      ? rawCreditMode
+      : "acting";
   return { id, creditMode };
 }
 
@@ -68,7 +70,9 @@ function toUrl({ view, selection, person }: UrlState): string {
   if (view !== "search") params.set("view", view);
   if (person !== null) {
     params.set("person", String(person.id));
-    if (person.creditMode === "creative") params.set("credits", "creative");
+    if (person.creditMode !== "acting") {
+      params.set("credits", person.creditMode);
+    }
   }
   else if (selection) params.set("title", itemKey(selection.id, selection.mediaType));
   const query = params.toString();

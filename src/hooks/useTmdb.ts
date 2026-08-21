@@ -6,7 +6,7 @@ import {
   getPerson,
   getSimilarTitles,
   getTrendingTitles,
-  searchMulti,
+  searchWithFuzzyFallback,
 } from "@/lib/tmdb";
 import { useSettings } from "@/stores/settings";
 import type { MediaType } from "@/types";
@@ -17,7 +17,7 @@ export function useSearch(query: string) {
 
   return useQuery({
     queryKey: ["search", trimmed, apiKey],
-    queryFn: () => searchMulti(apiKey, trimmed),
+    queryFn: () => searchWithFuzzyFallback(apiKey, trimmed),
     enabled: apiKey.length > 0 && trimmed.length > 1,
   });
 }

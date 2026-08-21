@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WatchedDialog } from "@/components/library/WatchedDialog";
 import { CurrentTitleCommands } from "@/components/command-palette/CurrentTitleCommands";
 import { NavigationCommands } from "@/components/command-palette/NavigationCommands";
+import { PersonResultCommands } from "@/components/command-palette/PersonResultCommands";
 import { TitleResultCommands } from "@/components/command-palette/TitleResultCommands";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDetails, useSearch } from "@/hooks/useTmdb";
@@ -31,6 +32,8 @@ import { toast } from "@/stores/toast";
 import type {
   ActionDef,
   LibraryItem,
+  PersonSearchResult,
+  PersonSelection,
   SearchResult,
   SelectionRef,
   View,
@@ -44,6 +47,7 @@ interface CommandPaletteProps {
   onGoHome: () => void;
   onViewChange: (view: View) => void;
   onSelectTitle: (selection: SelectionRef) => void;
+  onSelectPerson: (selection: PersonSelection) => void;
   onOpenSettings: () => void;
 }
 
@@ -53,6 +57,7 @@ interface PendingAction {
 }
 
 const MAX_TITLE_RESULTS = 10;
+const MAX_PERSON_RESULTS = 5;
 
 function isEditableTarget(target: EventTarget | null): boolean {
   return (
@@ -72,6 +77,7 @@ export function CommandPalette({
   onGoHome,
   onViewChange,
   onSelectTitle,
+  onSelectPerson,
   onOpenSettings,
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
@@ -130,10 +136,14 @@ export function CommandPalette({
   const titleResults = useMemo(
     () =>
       sortResults(
-        filterByMinimumVotes(search.data ?? [], minimumVotes),
+        filterByMinimumVotes(search.data?.titles ?? [], minimumVotes),
         sortOrder,
       ).slice(0, MAX_TITLE_RESULTS),
-    [minimumVotes, search.data, sortOrder],
+    [minimumVotes, search.data?.titles, sortOrder],
+  );
+  const personResults = (search.data?.people ?? []).slice(
+    0,
+    MAX_PERSON_RESULTS,
   );
 
   const actions = useActions((state) => state.actions);
@@ -167,6 +177,11 @@ export function CommandPalette({
     });
     closePalette();
     onSelectTitle(toSelectionRef(result));
+  };
+
+  const choosePerson = (person: PersonSearchResult) => {
+    closePalette();
+    onSelectPerson({ id: person.id, creditMode: person.creditMode });
   };
 
   const navigate = (nextView: View) => {
@@ -207,12 +222,12 @@ export function CommandPalette({
     trimmedQuery.length >= 2 && debouncedQuery.trim() !== trimmedQuery;
   const emptyMessage =
     apiKey.length === 0
-      ? "Add a TMDB API key in Settings to search titles."
+      ? "Add a TMDB API key in Settings to search titles and people."
       : trimmedQuery.length < 2
-        ? "Type at least two characters to search titles."
+        ? "Type at least two characters to search titles or people."
         : searchIsSettling || search.isFetching
           ? "Searching TMDB…"
-          : "No matching commands or titles.";
+          : "No matching commands, titles, or people.";
 
   return (
     <>
@@ -220,7 +235,7 @@ export function CommandPalette({
         <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0">
           <DialogTitle className="sr-only">WatchBridge command palette</DialogTitle>
           <DialogDescription className="sr-only">
-            Search movies and series or run an action.
+            Search movies, series, and people or run an action.
           </DialogDescription>
 
           <Command loop>
@@ -228,8 +243,8 @@ export function CommandPalette({
               autoFocus
               value={query}
               onValueChange={setQuery}
-              placeholder="Search titles or run a command…"
-              aria-label="Search titles or run a command"
+              placeholder="Search titles, people, or commands…"
+              aria-label="Search titles, people, or commands"
             />
             <CommandList>
               <CommandEmpty>{emptyMessage}</CommandEmpty>
@@ -255,9 +270,17 @@ export function CommandPalette({
                 }}
               />
 
+              <PersonResultCommands
+                people={personResults}
+                searching={search.isFetching}
+                closestMatches={search.data?.usedFuzzyFallback ?? false}
+                onSelect={choosePerson}
+              />
+
               <TitleResultCommands
                 results={titleResults}
                 searching={search.isFetching}
+                closestMatches={search.data?.usedFuzzyFallback ?? false}
                 onSelect={chooseTitle}
               />
             </CommandList>

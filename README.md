@@ -33,9 +33,10 @@ flowchart LR
     APP -->|actions you define| OUT["wherever you want it<br/>apps · servers · notes"]
 ```
 
-**Search.** One box looks up films and series together, and ranks what comes
-back so the things people have actually seen rise to the top rather than
-whatever happens to match the text best.
+**Search.** One box looks up films, series, actors, directors and producers.
+When TMDB's regular text search has no strong match, WatchBridge lazily checks
+a compact fuzzy index built from TMDB's official daily exports, so misspellings
+and reversed words still surface likely matches.
 
 **Triage.** Line up the candidates you're considering, put them side by side,
 and pick one. When you've watched it, rate it and write down what you thought.
@@ -71,8 +72,16 @@ bun run build      # typecheck + production build
 bun run preview    # serve the build
 ```
 
-Pushing to `master` deploys to GitHub Pages via the included workflow. Set
-**Settings → Pages → Source** to **GitHub Actions** first.
+The repository includes the generated fuzzy-search index. To refresh it from
+TMDB's latest daily movie, TV and person exports:
+
+```bash
+bun run search-index:build
+```
+
+Pushing to `master` deploys to GitHub Pages via the included workflow, which
+also refreshes the search index. A daily scheduled deployment keeps it current.
+Set **Settings → Pages → Source** to **GitHub Actions** first.
 
 Before merging a release, bump the patch version and commit the updated
 `package.json`:

@@ -1,11 +1,19 @@
 import { itemKey } from "@/lib/library";
+import {
+  findFuzzyCandidates,
+  searchSimilarity,
+  type FuzzyCandidate,
+} from "@/lib/fuzzySearch";
 import type {
   CastMember,
   CountryProviders,
   Genre,
   MediaType,
+  MultiSearchResults,
   PersonDetails,
   PersonCredit,
+  PersonCreditMode,
+  PersonSearchResult,
   SearchResult,
   TitleDetails,
   Trailer,
@@ -104,6 +112,9 @@ interface RawSearchItem {
   vote_average?: number;
   vote_count?: number;
   adult?: boolean;
+  profile_path?: string | null;
+  known_for_department?: string;
+  known_for?: RawSearchItem[];
 }
 
 function toSearchResult(
@@ -128,10 +139,35 @@ function toSearchResult(
 const isTitle = (r: RawSearchItem) =>
   r.media_type === "movie" || r.media_type === "tv";
 
+function creditModeForDepartment(department?: string): PersonCreditMode {
+  if (department === "Acting") return "acting";
+  if (department === "Production") return "production";
+  return "creative";
+}
+
+const SEARCHABLE_PERSON_DEPARTMENTS = new Set([
+  "Acting",
+  "Directing",
+  "Production",
+]);
+
+function toPersonSearchResult(result: RawSearchItem): PersonSearchResult {
+  return {
+    id: result.id,
+    name: result.name ?? "Unknown person",
+    profilePath: result.profile_path ?? null,
+    knownForDepartment: result.known_for_department ?? "",
+    knownFor: (result.known_for ?? [])
+      .filter(isTitle)
+      .map((title) => toSearchResult(title)),
+    creditMode: creditModeForDepartment(result.known_for_department),
+  };
+}
+
 export async function searchMulti(
   apiKey: string,
   query: string,
-): Promise<SearchResult[]> {
+): Promise<MultiSearchResults> {
   const data = await tmdbFetch<{ results: RawSearchItem[] }>(
     buildUrl("/search/multi", apiKey, {
       query,
@@ -140,9 +176,134 @@ export async function searchMulti(
     }),
   );
 
-  return data.results
-    .filter(isTitle)
-    .map((result) => toSearchResult(result));
+  const results: MultiSearchResults = {
+    titles: [],
+    people: [],
+    usedFuzzyFallback: false,
+  };
+  for (const result of data.results) {
+    if (isTitle(result)) results.titles.push(toSearchResult(result));
+    else if (
+      result.media_type === "person" &&
+      SEARCHABLE_PERSON_DEPARTMENTS.has(result.known_for_department ?? "")
+    ) {
+      results.people.push(toPersonSearchResult(result));
+    }
+  }
+  return results;
+}
+
+const STRONG_SEARCH_MATCH = 0.82;
+
+function hasStrongSearchMatch(
+  query: string,
+  results: MultiSearchResults,
+): boolean {
+  return (
+    results.titles.some(
+      (title) => searchSimilarity(query, title.title) >= STRONG_SEARCH_MATCH,
+    ) ||
+    results.people.some(
+      (person) => searchSimilarity(query, person.name) >= STRONG_SEARCH_MATCH,
+    )
+  );
+}
+
+async function hydrateFuzzyTitle(
+  apiKey: string,
+  candidate: FuzzyCandidate,
+): Promise<SearchResult> {
+  const mediaType: MediaType = candidate.kind === "m" ? "movie" : "tv";
+  const result = await tmdbFetch<RawSearchItem>(
+    buildUrl(`/${mediaType}/${candidate.id}`, apiKey),
+  );
+  return toSearchResult(result, mediaType);
+}
+
+async function hydrateFuzzyPerson(
+  apiKey: string,
+  candidate: FuzzyCandidate,
+): Promise<PersonSearchResult | null> {
+  const person = await tmdbFetch<RawPerson>(
+    buildUrl(`/person/${candidate.id}`, apiKey),
+  );
+  if (!SEARCHABLE_PERSON_DEPARTMENTS.has(person.known_for_department ?? "")) {
+    return null;
+  }
+
+  return {
+    id: person.id,
+    name: person.name,
+    profilePath: person.profile_path ?? null,
+    knownForDepartment: person.known_for_department ?? "",
+    knownFor: [],
+    creditMode: creditModeForDepartment(person.known_for_department),
+  };
+}
+
+function mergeTitles(
+  fuzzy: SearchResult[],
+  exact: SearchResult[],
+): SearchResult[] {
+  const seen = new Set<string>();
+  return [...fuzzy, ...exact].filter((title) => {
+    const key = itemKey(title.id, title.mediaType);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function mergePeople(
+  fuzzy: PersonSearchResult[],
+  exact: PersonSearchResult[],
+): PersonSearchResult[] {
+  const seen = new Set<number>();
+  return [...fuzzy, ...exact].filter((person) => {
+    if (seen.has(person.id)) return false;
+    seen.add(person.id);
+    return true;
+  });
+}
+
+/** Exact TMDB search first; fuzzy index and extra hydration only when needed. */
+export async function searchWithFuzzyFallback(
+  apiKey: string,
+  query: string,
+): Promise<MultiSearchResults> {
+  const exact = await searchMulti(apiKey, query);
+  if (hasStrongSearchMatch(query, exact)) return exact;
+
+  try {
+    const candidates = await findFuzzyCandidates(query);
+    const [titleResults, personResults] = await Promise.all([
+      Promise.allSettled(
+        candidates.titles.map((candidate) =>
+          hydrateFuzzyTitle(apiKey, candidate),
+        ),
+      ),
+      Promise.allSettled(
+        candidates.people.map((candidate) =>
+          hydrateFuzzyPerson(apiKey, candidate),
+        ),
+      ),
+    ]);
+    const fuzzyTitles = titleResults.flatMap((result) =>
+      result.status === "fulfilled" ? [result.value] : [],
+    );
+    const fuzzyPeople = personResults.flatMap((result) =>
+      result.status === "fulfilled" && result.value ? [result.value] : [],
+    );
+    const usedFuzzyFallback = fuzzyTitles.length > 0 || fuzzyPeople.length > 0;
+
+    return {
+      titles: mergeTitles(fuzzyTitles, exact.titles),
+      people: mergePeople(fuzzyPeople, exact.people),
+      usedFuzzyFallback,
+    };
+  } catch {
+    return exact;
+  }
 }
 
 // ---- Discovery ------------------------------------------------------------
@@ -465,6 +626,14 @@ function normalizeCreativeCredits(
   );
 }
 
+function normalizeProductionCredits(
+  crew?: RawPersonCrewCredit[],
+): SearchResult[] {
+  return normalizeCredits(
+    (crew ?? []).filter((credit) => credit.job?.includes("Producer")),
+  );
+}
+
 export async function getPerson(
   apiKey: string,
   id: number,
@@ -483,5 +652,6 @@ export async function getPerson(
     biography: d.biography ?? "",
     actingCredits: normalizeCredits(d.combined_credits?.cast),
     creativeCredits: normalizeCreativeCredits(d.combined_credits?.crew),
+    productionCredits: normalizeProductionCredits(d.combined_credits?.crew),
   };
 }

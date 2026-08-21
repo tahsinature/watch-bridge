@@ -72,7 +72,11 @@ export default function App() {
           {!hasApiKey ? (
             <ApiKeyGate onOpenSettings={() => setSettingsOpen(true)} />
           ) : view === "search" ? (
-            <SearchView key={homeKey} onSelect={setSelection} />
+            <SearchView
+              key={homeKey}
+              onSelect={setSelection}
+              onSelectPerson={setPerson}
+            />
           ) : view === "shortlist" ? (
             <ShortlistView onSelect={setSelection} />
           ) : (
@@ -102,6 +106,7 @@ export default function App() {
           onGoHome={goHome}
           onViewChange={setView}
           onSelectTitle={setSelection}
+          onSelectPerson={setPerson}
           onOpenSettings={() => setSettingsOpen(true)}
         />
         <Toaster />

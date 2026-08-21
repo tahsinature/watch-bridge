@@ -9,6 +9,8 @@ name: Deploy
 on:
   push:
     branches: [main, master]
+  schedule:
+    - cron: "30 8 * * *"
   workflow_dispatch:
 
 permissions:
@@ -29,6 +31,7 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
+      - run: bun run search-index:build
       - run: bun run build
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ProfileImage } from "@/components/ui/profile-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tabs,
@@ -16,7 +17,6 @@ import {
 import { DetailActionBar } from "./DetailActionBar";
 import { MovieCard } from "@/components/search/MovieCard";
 import { usePerson } from "@/hooks/useTmdb";
-import { posterUrl } from "@/lib/tmdb";
 import { toSelectionRef } from "@/lib/library";
 import type {
   PersonCreditMode,
@@ -33,7 +33,7 @@ interface PersonDetailProps {
   onOpenCommandPalette: () => void;
 }
 
-/** Acting and creative filmography, opened from a title's people credits. */
+/** Acting, creative, and production filmography for a selected person. */
 export function PersonDetail({
   person,
   onClose,
@@ -55,8 +55,9 @@ export function PersonDetail({
         className="grid-rows-[1fr_auto] gap-0 overflow-hidden p-0"
       >
         <DialogTitle className="sr-only">{data?.name ?? "Person"}</DialogTitle>
-          <DialogDescription className="sr-only">
-          Acting and creative credits for {data?.name ?? "the selected person"}.
+        <DialogDescription className="sr-only">
+          Acting, creative, and production credits for{" "}
+          {data?.name ?? "the selected person"}.
         </DialogDescription>
 
         <div className="min-h-0 overflow-y-auto scrollbar-thin">
@@ -97,41 +98,20 @@ function PersonBody({
   initialCreditMode: PersonCreditMode;
   onSelectTitle: (ref: SelectionRef) => void;
 }) {
-  const photo = posterUrl(person.profilePath, "w185");
+  const creditGroups = getCreditGroups(person);
   const defaultCreditMode =
-    initialCreditMode === "creative" && person.creativeCredits.length > 0
-      ? "creative"
-      : person.actingCredits.length > 0
-        ? "acting"
-        : "creative";
-  const hasBothCreditTypes =
-    person.actingCredits.length > 0 && person.creativeCredits.length > 0;
-  const creditSummary = [
-    person.actingCredits.length > 0
-      ? `${person.actingCredits.length} acting`
-      : "",
-    person.creativeCredits.length > 0
-      ? `${person.creativeCredits.length} directed / created`
-      : "",
-  ]
-    .filter(Boolean)
+    creditGroups.find((group) => group.value === initialCreditMode)?.value ??
+    creditGroups[0]?.value ??
+    "acting";
+  const creditSummary = creditGroups
+    .map((group) => `${group.credits.length} ${group.summaryLabel}`)
     .join(" · ");
 
   return (
     <div className="pb-6">
       <div className="mx-auto flex max-w-6xl items-start gap-4 px-6 pt-6">
         <div className="size-24 shrink-0 overflow-hidden border border-border bg-secondary">
-          {photo ? (
-            <img
-              src={photo}
-              alt={person.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="grid h-full w-full place-items-center">
-              <User className="size-8 text-muted-foreground" />
-            </div>
-          )}
+          <ProfileImage path={person.profilePath} alt={person.name} />
         </div>
 
         <div className="min-w-0">
@@ -152,45 +132,77 @@ function PersonBody({
       </div>
 
       <div className="mx-auto max-w-6xl px-6 pt-7">
-        {person.actingCredits.length === 0 &&
-        person.creativeCredits.length === 0 ? (
+        {creditGroups.length === 0 ? (
           <EmptyState
             icon={User}
             title="No credits found"
-            detail="TMDB has no acting, directing or creator credits listed for this person."
+            detail="TMDB has no acting, directing, creator, or producer credits listed for this person."
           />
         ) : (
           <Tabs defaultValue={defaultCreditMode}>
-            {hasBothCreditTypes && (
-              <TabsList aria-label="Filmography credit type">
-                <TabsTrigger value="acting">
-                  Acting · {person.actingCredits.length}
-                </TabsTrigger>
-                <TabsTrigger value="creative">
-                  Directed / created · {person.creativeCredits.length}
-                </TabsTrigger>
+            {creditGroups.length > 1 ? (
+              <TabsList
+                aria-label="Filmography credit type"
+                className="h-auto max-w-full flex-wrap justify-start"
+              >
+                {creditGroups.map((group) => (
+                  <TabsTrigger key={group.value} value={group.value}>
+                    {group.title} · {group.credits.length}
+                  </TabsTrigger>
+                ))}
               </TabsList>
-            )}
+            ) : null}
 
-            <TabsContent value="acting" className="mt-4">
-              <FilmographyGrid
-                title="Acting"
-                credits={person.actingCredits}
-                onSelectTitle={onSelectTitle}
-              />
-            </TabsContent>
-            <TabsContent value="creative" className="mt-4">
-              <FilmographyGrid
-                title="Directed / created"
-                credits={person.creativeCredits}
-                onSelectTitle={onSelectTitle}
-              />
-            </TabsContent>
+            {creditGroups.map((group) => (
+              <TabsContent
+                key={group.value}
+                value={group.value}
+                className="mt-4"
+              >
+                <FilmographyGrid
+                  title={group.title}
+                  credits={group.credits}
+                  onSelectTitle={onSelectTitle}
+                />
+              </TabsContent>
+            ))}
           </Tabs>
         )}
       </div>
     </div>
   );
+}
+
+interface CreditGroup {
+  value: PersonCreditMode;
+  title: string;
+  summaryLabel: string;
+  credits: SearchResult[];
+}
+
+function getCreditGroups(person: PersonDetails): CreditGroup[] {
+  const groups: CreditGroup[] = [
+    {
+      value: "acting",
+      title: "Acting",
+      summaryLabel: "acting",
+      credits: person.actingCredits,
+    },
+    {
+      value: "creative",
+      title: "Directed / created",
+      summaryLabel: "directed / created",
+      credits: person.creativeCredits,
+    },
+    {
+      value: "production",
+      title: "Produced",
+      summaryLabel: "produced",
+      credits: person.productionCredits,
+    },
+  ];
+
+  return groups.filter((group) => group.credits.length > 0);
 }
 
 function FilmographyGrid({

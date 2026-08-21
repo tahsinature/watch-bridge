@@ -82,6 +82,22 @@ export interface SearchResult {
   adult: boolean;
 }
 
+/** A person returned alongside titles by TMDB's multi-search. */
+export interface PersonSearchResult {
+  id: number;
+  name: string;
+  profilePath: string | null;
+  knownForDepartment: string;
+  knownFor: SearchResult[];
+  creditMode: PersonCreditMode;
+}
+
+export interface MultiSearchResults {
+  titles: SearchResult[];
+  people: PersonSearchResult[];
+  usedFuzzyFallback: boolean;
+}
+
 /** Official TMDB genre entry for either movies or TV. */
 export interface Genre {
   id: number;
@@ -110,7 +126,7 @@ export interface CastMember {
   profilePath: string | null;
 }
 
-export type PersonCreditMode = "acting" | "creative";
+export type PersonCreditMode = "acting" | "creative" | "production";
 
 /** Person detail selection, including which side of their work to show first. */
 export interface PersonSelection {
@@ -139,6 +155,8 @@ export interface PersonDetails {
   actingCredits: SearchResult[];
   /** Titles explicitly credited as Director or Creator, most-voted first. */
   creativeCredits: SearchResult[];
+  /** Titles explicitly credited with a producer role, most-voted first. */
+  productionCredits: SearchResult[];
 }
 
 export interface WatchProvider {
