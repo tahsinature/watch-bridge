@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { AlertCircle, User } from "lucide-react";
 import {
   Dialog,
@@ -16,8 +17,15 @@ import {
 } from "@/components/ui/tabs";
 import { DetailActionBar } from "./DetailActionBar";
 import { MovieCard } from "@/components/search/MovieCard";
+import { FilmographySortSelect } from "./FilmographySortSelect";
 import { usePerson } from "@/hooks/useTmdb";
 import { toSelectionRef } from "@/lib/library";
+import {
+  isUpcomingRelease,
+  localDateKey,
+  sortFilmographyResults,
+  type FilmographySortOrder,
+} from "@/lib/sort";
 import type {
   PersonCreditMode,
   PersonDetails,
@@ -98,6 +106,8 @@ function PersonBody({
   initialCreditMode: PersonCreditMode;
   onSelectTitle: (ref: SelectionRef) => void;
 }) {
+  const [sortOrder, setSortOrder] =
+    useState<FilmographySortOrder>("newest");
   const creditGroups = getCreditGroups(person);
   const defaultCreditMode =
     creditGroups.find((group) => group.value === initialCreditMode)?.value ??
@@ -162,6 +172,8 @@ function PersonBody({
                 <FilmographyGrid
                   title={group.title}
                   credits={group.credits}
+                  sortOrder={sortOrder}
+                  onSortOrderChange={setSortOrder}
                   onSelectTitle={onSelectTitle}
                 />
               </TabsContent>
@@ -208,22 +220,39 @@ function getCreditGroups(person: PersonDetails): CreditGroup[] {
 function FilmographyGrid({
   title,
   credits,
+  sortOrder,
+  onSortOrderChange,
   onSelectTitle,
 }: {
   title: string;
   credits: SearchResult[];
+  sortOrder: FilmographySortOrder;
+  onSortOrderChange: (order: FilmographySortOrder) => void;
   onSelectTitle: (ref: SelectionRef) => void;
 }) {
+  const today = localDateKey();
+  const sortedCredits = useMemo(
+    () => sortFilmographyResults(credits, sortOrder, today),
+    [credits, sortOrder, today],
+  );
+
   if (credits.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2.5">
-      <h3 className="eyebrow">{title}</h3>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="eyebrow">{title}</h3>
+        <FilmographySortSelect
+          value={sortOrder}
+          onChange={onSortOrderChange}
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {credits.map((credit) => (
+        {sortedCredits.map((credit) => (
           <MovieCard
             key={`${credit.mediaType}-${credit.id}`}
             result={credit}
+            upcoming={isUpcomingRelease(credit.releaseDate, today)}
             onSelect={(result) => onSelectTitle(toSelectionRef(result))}
           />
         ))}

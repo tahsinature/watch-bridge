@@ -1,5 +1,7 @@
 import type { SearchResult, SortOrder } from "@/types";
 
+export type FilmographySortOrder = Exclude<SortOrder, "relevance">;
+
 /** Default first — the dropdown leads with what you'll see out of the box. */
 export const SORT_ORDERS: { value: SortOrder; label: string }[] = [
   { value: "votes", label: "Most voted" },
@@ -7,6 +9,17 @@ export const SORT_ORDERS: { value: SortOrder; label: string }[] = [
   { value: "rating", label: "Best rated" },
   { value: "newest", label: "Newest first" },
   { value: "oldest", label: "Oldest first" },
+];
+
+/** Person credits are complete lists, so relevance is not meaningful here. */
+export const FILMOGRAPHY_SORT_ORDERS: {
+  value: FilmographySortOrder;
+  label: string;
+}[] = [
+  { value: "newest", label: "Latest release" },
+  { value: "votes", label: "Most voted" },
+  { value: "rating", label: "Best rated" },
+  { value: "oldest", label: "Oldest release" },
 ];
 
 /**
@@ -65,4 +78,49 @@ export function sortResults(
   };
 
   return [...results].sort(comparators[order]);
+}
+
+/** YYYY-MM-DD in the viewer's timezone, matching how release dates are shown. */
+export function localDateKey(now = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function isUpcomingRelease(
+  releaseDate: string,
+  today = localDateKey(),
+): boolean {
+  return releaseDate !== "" && releaseDate > today;
+}
+
+/**
+ * "Latest" puts the next upcoming projects first (nearest date first), then
+ * released work newest-first, and finally credits without a known date.
+ */
+export function sortFilmographyResults(
+  results: SearchResult[],
+  order: FilmographySortOrder,
+  today = localDateKey(),
+): SearchResult[] {
+  if (order !== "newest") return sortResults(results, order);
+
+  const releaseGroup = (releaseDate: string) => {
+    if (!releaseDate) return 2;
+    return isUpcomingRelease(releaseDate, today) ? 0 : 1;
+  };
+
+  return [...results].sort((a, b) => {
+    const groupDifference =
+      releaseGroup(a.releaseDate) - releaseGroup(b.releaseDate);
+    if (groupDifference !== 0) return groupDifference;
+
+    const bothUpcoming = isUpcomingRelease(a.releaseDate, today);
+    const dateDifference = bothUpcoming
+      ? a.releaseDate.localeCompare(b.releaseDate)
+      : b.releaseDate.localeCompare(a.releaseDate);
+
+    return dateDifference || b.voteCount - a.voteCount;
+  });
 }

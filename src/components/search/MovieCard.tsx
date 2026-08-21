@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Clapperboard, Tv } from "lucide-react";
 import { AdultBadge } from "@/components/ui/adult-badge";
+import { Badge } from "@/components/ui/badge";
 import { PosterImage } from "@/components/ui/poster-image";
 import { RatingBadge } from "@/components/ui/rating-badge";
 import { ShortlistButton } from "@/components/library/ShortlistButton";
@@ -10,9 +11,14 @@ import type { SearchResult } from "@/types";
 interface MovieCardProps {
   result: SearchResult;
   onSelect: (result: SearchResult) => void;
+  upcoming?: boolean;
 }
 
-export function MovieCard({ result, onSelect }: MovieCardProps) {
+export function MovieCard({
+  result,
+  onSelect,
+  upcoming = false,
+}: MovieCardProps) {
   return (
     <motion.div
       layout
@@ -69,10 +75,17 @@ export function MovieCard({ result, onSelect }: MovieCardProps) {
         >
           {result.title}
         </p>
-        {result.year && (
-          <p className="mt-auto pt-1 text-xs text-muted-foreground">
-            {result.year}
-          </p>
+        {(result.year || upcoming) && (
+          <div className="mt-auto flex items-center gap-2 pt-1">
+            {result.year && (
+              <p className="text-xs text-muted-foreground">{result.year}</p>
+            )}
+            {upcoming && (
+              <Badge variant="gold" className="ml-auto">
+                Upcoming
+              </Badge>
+            )}
+          </div>
         )}
       </button>
     </motion.div>
